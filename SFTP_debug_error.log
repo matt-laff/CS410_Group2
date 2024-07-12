@@ -1,0 +1,27 @@
+14:11:25 - sftp_logger - DEBUG - New SFTP Instance Created
+14:11:25 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+14:11:25 - sftp_logger - DEBUG - Authenticating with username: matt
+14:11:26 - sftp_logger - DEBUG - Creating SFTP client
+14:11:26 - sftp_logger - DEBUG - SFTP connection established successfully
+14:12:01 - sftp_logger - DEBUG - New SFTP Instance Created
+14:12:01 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+14:12:01 - sftp_logger - DEBUG - Authenticating with username: matt
+14:12:01 - sftp_logger - DEBUG - Creating SFTP client
+14:12:02 - sftp_logger - DEBUG - SFTP connection established successfully
+14:12:15 - sftp_logger - DEBUG - New SFTP Instance Created
+14:12:15 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+14:12:15 - sftp_logger - DEBUG - Authenticating with username: matt
+14:12:16 - sftp_logger - DEBUG - Creating SFTP client
+14:12:16 - sftp_logger - DEBUG - SFTP connection established successfully
+14:13:13 - sftp_logger - ERROR - Failed to download file: [Errno 2] No such file or directory: 'Users\\matt\\OneDrive\\Desktop\\Universe\\School\\CS_410\\test.txt'
+14:13:30 - sftp_logger - DEBUG - New SFTP Instance Created
+14:13:30 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+14:13:30 - sftp_logger - DEBUG - Authenticating with username: matt
+14:13:31 - sftp_logger - DEBUG - Creating SFTP client
+14:13:31 - sftp_logger - DEBUG - SFTP connection established successfully
+14:15:08 - sftp_logger - DEBUG - New SFTP Instance Created
+14:15:08 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+14:15:08 - sftp_logger - DEBUG - Authenticating with username: matt
+14:15:08 - sftp_logger - DEBUG - Creating SFTP client
+14:15:09 - sftp_logger - DEBUG - SFTP connection established successfully
+14:15:13 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt

@@ -27,7 +27,7 @@ class DebugErrorHandler(logging.Handler):
         # Check if the log level is DEBUG or ERROR
         if record.levelno in [logging.DEBUG, logging.ERROR]:
             # Open the file in append mode
-            with open(self.filename, 'w') as f:
+            with open(self.filename, 'a') as f:
                 # Write the formatted log record to the file, followed by a newline
                 f.write(self.format(record) + '\n')
 
@@ -42,7 +42,7 @@ def setup_logger(name, log_file):
     logger.setLevel(logging.DEBUG)
 
     # Create a formatter for log messages
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', "%H:%M:%S")
 
     # Create an instance of our custom DebugErrorHandler
     debug_error_handler = DebugErrorHandler(log_file)

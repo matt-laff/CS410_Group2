@@ -2,8 +2,9 @@ import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
 import LogHandler
 from LogHandler import setup_logger
+import os
 
-
+DEFAULT_PORT = 22
 
 class SFTP:
 
@@ -16,7 +17,7 @@ class SFTP:
 
         #logger that only captures debug messages, errors, and raised values
         self._debug_logger = setup_logger('sftp_logger', 'SFTP_debug_error.log')
-
+        self._debug_logger.debug("New SFTP Instance Created")
         #Calculate the number of arguments passed to the initializer. Will use as key for constructor calling.
         arg_len = len(args)
 
@@ -24,7 +25,7 @@ class SFTP:
         # Action_map is a dictionary that maps the number of arguments (arg_len) to specific functions.
         # This allows us to dynamically choose which function to execute based on the number of arguments.
         action_map = {
-            0: self._default_constructor,
+            0: self._default_constructor(),
             1: lambda: self._copy_constructor(*args),  # Wrap the call in a lambda to pass args
             4: lambda: self._param_constructor(*args)  # Wrap the call in a lambda to pass args
         }
@@ -35,6 +36,56 @@ class SFTP:
         #Cannot find correct argument, abort instansiation.
         else:
             raise ValueError("Invalid argument length when initializing SFTP build")
+
+
+    #Defualt constructor
+    def _default_constructor(self):
+
+        # Store & initialize connection parameters connection parameters
+        self._port = None
+        self._host = None
+        self._username = None
+        self._password = None
+
+         # Initialize connection objects
+        self._transport = None
+        self._SFTP = None
+
+
+    #Copy constructor
+    def _copy_constructor(self,to_copy):
+
+        #Copy constructor object to copy from must be of type SFTP.
+        if type(to_copy) != SFTP: 
+            raise ValueError("Type of to_copy is not SFTP in copy constructor")
+
+        # Store & initialize connection parameters connection parameters
+        self._port = to_copy._port 
+        self._host = to_copy._host
+        self._username = to_copy._username
+        self._password = to_copy._password
+
+         # Initialize connection objects
+        self._transport = to_copy._transport
+        self._SFTP = to_copy._SFTP
+
+
+
+    #Param constructor
+    def _param_constructor(self, port, host, username, password):
+        try:
+            self._port = int(port)
+        except Exception as e:
+            self._debug_logger.error(f"Failed to cast port to int, exception {str(e)}")
+            self._port = DEFAULT_PORT
+        self._host = host
+        self._username = username
+        self._password = password
+
+         # Initialize connection objects
+        self._transport = None
+        self._SFTP = None
+
 
 
     #destructor
@@ -59,66 +110,8 @@ class SFTP:
         self._SFTP = None
 
 
-
-    #Defualt constructor
-    def _default_constructor(self):
-
-        # Store & initialize connection parameters connection parameters
-        self._port = None
-        self._host = None
-        self._username = None
-        self._password = None
-
-         # Initialize connection objects
-        self._transport = None
-        self._SFTP = None
-
-
-
-
-    #Copy constructor
-    def _copy_constructor(self,to_copy):
-
-        #Copy constructor object to copy from must be of type SFTP.
-        if type(to_copy) != SFTP(): 
-            raise ValueError("Type of to_copy is not SFTP in copy constructor")
-
-        # Store & initialize connection parameters connection parameters
-        self._port = to_copy._port 
-        self._host = to_copy._host
-        self._username = to_copy._username
-        self._password = to_copy._password
-
-         # Initialize connection objects
-        self._transport = to_copy._transport
-        self._SFTP = to_copy._SFTP
-
-
-
-    #Param constructor
-    def _param_constructor(self, port, host, username, password):
-        self._port = port
-        self._host = host
-        self._username = username
-        self._password = password
-
-         # Initialize connection objects
-        self._transport = None
-        self._SFTP = None
-
-
-
-    #function for connection to remote server
-    def connect():
-
-        #This function call tells paramiko to redirect all its logging output to a file named paramiko.log.
-        #By default, this will capture all log messages regardless of their severity level (e.g., DEBUG, INFO, WARNING, ERROR).
-        paramiko.util.log_to_file("paramiko.log")
-
-
-
     def connect(self):
-            
+
         try:
             self._debug_logger.debug(f"Connecting to {self._host}:{self._port}")
             self._transport = paramiko.Transport((self._host, self._port))
@@ -130,7 +123,6 @@ class SFTP:
             self._SFTP = paramiko.SFTPClient.from_transport(self._transport)
             
             self._debug_logger.debug("SFTP connection established successfully")
-
         #TODO: BadAuthenticationType???? 
         #TODO: GENERIC EXCPEITON HANDLING
         #! HOW ARE WE NOT CATCHING AN ERROR WITH THE CATCH ALL ----- UNDERSTADN---- "EXEPTION CHAINING"
@@ -170,3 +162,16 @@ class SFTP:
                 print(item)
         except IOError as e:
             print(f"Failed to list directory: {e}")
+    
+    
+    def download(self, source_path, destination_path):
+        try:
+            source_tok = source_path.split('/')
+            if (destination_path == ''):
+                local = os.getcwd() + "\\" + source_tok[-1]
+            else:
+                local = destination_path + "\\" + source_tok[-1]
+            self._SFTP.get(source_path, local)
+            self._debug_logger.debug(f"Successfully downloaded {source_tok[-1]} to {local}")
+        except Exception as e:
+            self._debug_logger.error(f"Failed to download file: {str(e)}")
