@@ -3,6 +3,7 @@ from paramiko.ssh_exception import SSHException, AuthenticationException
 import LogHandler
 from LogHandler import setup_logger
 import os
+import sys
 
 DEFAULT_PORT = 22
 
@@ -165,13 +166,24 @@ class SFTP:
     
     
     def download(self, source_path, destination_path):
+        self._debug_logger.debug(f"Operating System: {sys.platform}") 
+        platform_map = {
+            "win32": "\\",
+            ("linux") or ("linux2"): "/",
+            "darwin": "/"
+        }
+        delim = platform_map[sys.platform]
+
+
         try:
             source_tok = source_path.split('/')
             if (destination_path == ''):
-                local = os.getcwd() + "\\" + source_tok[-1]
+                local = os.getcwd() + delim + source_tok[-1]
             else:
-                local = destination_path + "\\" + source_tok[-1]
+                local = destination_path + delim + source_tok[-1]
             self._SFTP.get(source_path, local)
             self._debug_logger.debug(f"Successfully downloaded {source_tok[-1]} to {local}")
         except Exception as e:
-            self._debug_logger.error(f"Failed to download file: {str(e)}")
+            error_msg = "Failed to download file"
+            print(f"{error_msg} {source_tok[-1]} to {local}")
+            self._debug_logger.error(f"{error_msg}: {str(e)}")

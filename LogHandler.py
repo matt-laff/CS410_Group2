@@ -32,8 +32,6 @@ class DebugErrorHandler(logging.Handler):
                 f.write(self.format(record) + '\n')
 
 
-
-
 # Define a function to set up a logger
 def setup_logger(name, log_file):
     # Create a logger with the given name
