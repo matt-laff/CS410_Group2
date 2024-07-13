@@ -187,8 +187,10 @@ class SFTP:
                 local = destination_path + delim + source_tok[-1] # Otherwise user has to specify the filename when entering the path
             self._SFTP.get(source_path, local) # All pa
             self.print_debug(f"Successfully downloaded {source_tok[-1]} to {local}", None, True) 
+            return True
         except Exception as e:
             self.print_error(f"Failed to download file {source_tok[-1]} to {local}", e, True)
+            return False
 
 
     def print_debug(self, message, e, out):

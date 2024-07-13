@@ -18,7 +18,7 @@ def client(password):
 
 
 
-def test_download(client):
+def test_download_success(client):
     client.connect() # Not sure if its better to do this here or in the fixture
     
     if (os.path.isfile("test.txt")):
@@ -26,6 +26,23 @@ def test_download(client):
     file_exists = os.path.isfile("test.txt")
     assert(file_exists == False)
 
-    client.download("test.txt", "")
+    success = client.download("test.txt", "")
     file_exists = os.path.isfile("test.txt")
     assert(file_exists == True)
+    assert(success == True)
+    
+def test_download_failure(client):
+    client.connect() # Not sure if its better to do this here or in the fixture
+    
+    if (os.path.isfile("test.txt")):
+        os.remove("test.txt")
+    file_exists = os.path.isfile("test.txt")
+    assert(file_exists == False)
+
+    success = client.download("", "")
+    file_exists = os.path.isfile("test.txt")
+    assert(file_exists == False)
+    assert(success == False)
+
+
+    
