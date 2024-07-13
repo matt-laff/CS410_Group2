@@ -62,3 +62,21 @@
 17:24:32 - sftp_logger - DEBUG - SFTP connection established successfully
 17:24:34 - sftp_logger - DEBUG - Operating System: win32
 17:24:35 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
+18:20:40 - sftp_logger - DEBUG - New SFTP Instance Created
+18:21:27 - sftp_logger - DEBUG - New SFTP Instance Created
+18:21:27 - sftp_logger - DEBUG - Operating System: win32
+18:21:27 - sftp_logger - ERROR - Failed to download file test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt : 'NoneType' object has no attribute 'get'
+18:22:23 - sftp_logger - DEBUG - New SFTP Instance Created
+18:22:23 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+18:22:24 - sftp_logger - DEBUG - Authenticating with username: matt
+18:22:25 - sftp_logger - DEBUG - Creating SFTP client
+18:22:25 - sftp_logger - DEBUG - SFTP connection established successfully
+18:22:25 - sftp_logger - DEBUG - Operating System: win32
+18:22:25 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
+18:23:02 - sftp_logger - DEBUG - New SFTP Instance Created
+18:23:02 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+18:23:02 - sftp_logger - DEBUG - Authenticating with username: matt
+18:23:02 - sftp_logger - DEBUG - Creating SFTP client
+18:23:03 - sftp_logger - DEBUG - SFTP connection established successfully
+18:23:03 - sftp_logger - DEBUG - Operating System: win32
+18:23:03 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
