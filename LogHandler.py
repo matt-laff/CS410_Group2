@@ -20,7 +20,7 @@ class DebugErrorHandler(logging.Handler):
         # Call the parent class's __init__ method
         super().__init__()
 
-        path = os.path.join(os.path.dirname(__file__), filename)
+        os.path.join(os.path.dirname(__file__), filename)
         # Store the filename as an instance variable
         if  os.path.isfile(filename):
             os.remove(filename)
