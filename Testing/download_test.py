@@ -5,15 +5,21 @@ sys.path.append("..")
 import SFTPClient
 
 @pytest.fixture
-def password():
+def credentials():
     full_path = os.path.join(os.path.dirname(__file__), "credentials.txt")
     with open(full_path, 'r') as file:
+        host = file.readline().strip()
+        port = file.readline().strip()
+        user = file.readline().strip() 
         password = file.readline().strip()
-    return password
+
+    return host,port,user,password
+
 
 @pytest.fixture
-def client(password):
-    client = SFTPClient.SFTP(22, "babbage.cs.pdx.edu", "matt", password)
+def client(credentials):
+    host,port,user,password = credentials
+    client = SFTPClient.SFTP(port, host, user, password)
     return client 
 
 
