@@ -50,3 +50,15 @@
 16:24:56 - sftp_logger - DEBUG - SFTP connection established successfully
 16:25:01 - sftp_logger - DEBUG - Operating System: win32
 16:25:01 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
+17:23:51 - sftp_logger - DEBUG - New SFTP Instance Created
+17:23:51 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+17:23:51 - sftp_logger - DEBUG - Authenticating with username: matt
+17:23:52 - sftp_logger - DEBUG - Creating SFTP client
+17:23:52 - sftp_logger - DEBUG - SFTP connection established successfully
+17:24:31 - sftp_logger - DEBUG - New SFTP Instance Created
+17:24:31 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+17:24:31 - sftp_logger - DEBUG - Authenticating with username: matt
+17:24:31 - sftp_logger - DEBUG - Creating SFTP client
+17:24:32 - sftp_logger - DEBUG - SFTP connection established successfully
+17:24:34 - sftp_logger - DEBUG - Operating System: win32
+17:24:35 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
