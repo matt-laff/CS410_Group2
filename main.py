@@ -14,7 +14,7 @@ def main():
     hostname = None
     port = None
     username = None
-    password = None
+    password = None 
 
     if (len(sys.argv) > 1):
         hostname = DEFAULT_HOST
@@ -29,6 +29,8 @@ def main():
 
 
     sftp_client.list_directory()
+
+    return 
     
     source_path = input("Enter file to download: ")
 
