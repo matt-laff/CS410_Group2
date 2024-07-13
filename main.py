@@ -2,6 +2,7 @@ import SFTPClient
 import LogHandler
 import getpass
 import os
+import sys, getopt
 
 
 DEFAULT_HOST = "babbage.cs.pdx.edu"
@@ -15,8 +16,13 @@ def main():
     username = None
     password = None
 
-    hostname, port, username, password = get_credentials(hostname, port, username, password)
-    print(hostname)
+    if (len(sys.argv) > 1):
+        hostname = DEFAULT_HOST
+        port = DEFAULT_PORT
+        username = DEFAULT_USER
+        password = getpass.getpass("Enter password: ")
+    else:
+        hostname, port, username, password = get_credentials(hostname, port, username, password)
 
     sftp_client = SFTPClient.SFTP(port, hostname, username, password)
     sftp_client.connect()

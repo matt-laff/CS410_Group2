@@ -3,6 +3,7 @@ from paramiko.ssh_exception import SSHException, AuthenticationException
 import LogHandler
 from LogHandler import setup_logger
 import os
+import sys
 
 DEFAULT_PORT = 22
 
@@ -162,16 +163,52 @@ class SFTP:
                 print(item)
         except IOError as e:
             print(f"Failed to list directory: {e}")
-    
-    
+
+
+    # Download from source_path on the remote server to destination_path on the local machine
     def download(self, source_path, destination_path):
+        self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
+        
+        # Maps the result of sys.platform to different delimiters for the path - necessary since windows uses \\ and linux/mac use / 
+        platform_map = {
+            "win32": "\\",
+            ("linux") or ("linux2"): "/",
+            "darwin": "/"
+        }
+        delim = platform_map[sys.platform]
+
         try:
-            source_tok = source_path.split('/')
+            source_tok = source_path.split('/') # Tokenize the source_path string to get the filename
             if (destination_path == ''):
-                local = os.getcwd() + "\\" + source_tok[-1]
+                local = os.getcwd() + delim + source_tok[-1]  # Null entry from user - get current working directory, 
+                                                                # add the appropriate slash to it (delim), 
+                                                                # and get the name of the download file (source_tok[-1] is the last item in the source_path)
             else:
-                local = destination_path + "\\" + source_tok[-1]
-            self._SFTP.get(source_path, local)
-            self._debug_logger.debug(f"Successfully downloaded {source_tok[-1]} to {local}")
+                local = destination_path + delim + source_tok[-1] # Otherwise user has to specify the filename when entering the path
+            self._SFTP.get(source_path, local) # All pa
+            self.print_debug(f"Successfully downloaded {source_tok[-1]} to {local}", None, True) 
         except Exception as e:
-            self._debug_logger.error(f"Failed to download file: {str(e)}")
+            self.print_error(f"Failed to download file {source_tok[-1]} to {local}", e, True)
+
+
+    def print_debug(self, message, e, out):
+        if (e == None):
+            if (out == True):
+                print(message)
+            self._debug_logger.debug(f"{message}")
+        else:
+            if (out == True):
+                print(message)
+            self._debug_logger.debug(f"{message} : {e}")
+        
+    
+    def print_error(self, message, e, out):
+        if (e == None):
+            if (out == True):
+                print(message)
+            self._debug_logger.error(f"{message}")
+        else:
+            if (out == True):
+                print(message)
+            self._debug_logger.error(f"{message} : {e}")
+        
