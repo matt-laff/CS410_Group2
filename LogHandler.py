@@ -1,5 +1,5 @@
 import logging
-
+import os
 
 # TODO: DECORATORS / OPERATORS
 # TODO: RE-WORK
@@ -19,7 +19,12 @@ class DebugErrorHandler(logging.Handler):
     def __init__(self, filename):
         # Call the parent class's __init__ method
         super().__init__()
+
+        path = os.path.join(os.path.dirname(__file__), filename)
         # Store the filename as an instance variable
+        if  os.path.isfile(filename):
+            os.remove(filename)
+
         self.filename = filename
 
     # Define the emit method, which is called for each log record

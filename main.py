@@ -13,7 +13,7 @@ def main():
     hostname = None
     port = None
     username = None
-    password = None
+    password = None 
 
     hostname, port, username, password = get_credentials(hostname, port, username, password)
     print(hostname)
@@ -23,6 +23,8 @@ def main():
 
 
     sftp_client.list_directory()
+
+    return 
     
     source_path = input("Enter file to download: ")
 
