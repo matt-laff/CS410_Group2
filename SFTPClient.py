@@ -117,6 +117,7 @@ class SFTP:
             self._debug_logger.debug(f"Connecting to {self._host}:{self._port}")
             self._transport = paramiko.Transport((self._host, self._port))
             
+            
             self._debug_logger.debug(f"Authenticating with username: {self._username}")
             self._transport.connect(None, self._username, self._password)
             
@@ -133,20 +134,17 @@ class SFTP:
             self._debug_logger.error(f"Authentication failed: {str(e)}")
             if self._transport:
                 self._transport.close()
-            raise
-        except SSHException as e:
-            stage = "transport creation" if self._transport is None else "SFTP client creation"
-            self._debug_logger.error(f"Failed during {stage}: {str(e)}")
-            if self._transport:
-                self._transport.close()
-            raise
+            
+            return False, (f"Authentication failed: {str(e)}")
+
         except Exception as e:
             self._debug_logger.error(f"Unexpected error during SFTP connection: {str(e)}")
             if self._transport:
                 self._transport.close()
-            raise
 
-        return "Connection Successful"
+            return False,(f"Unexpected error during SFTP connection: {str(e)}")
+
+        return True,"Connection Successful"
 
 
 
