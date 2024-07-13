@@ -80,3 +80,66 @@
 18:23:03 - sftp_logger - DEBUG - SFTP connection established successfully
 18:23:03 - sftp_logger - DEBUG - Operating System: win32
 18:23:03 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
+19:07:09 - sftp_logger - DEBUG - New SFTP Instance Created
+19:07:09 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:07:09 - sftp_logger - DEBUG - Authenticating with username: matt
+19:07:10 - sftp_logger - DEBUG - Creating SFTP client
+19:07:10 - sftp_logger - DEBUG - SFTP connection established successfully
+19:07:10 - sftp_logger - DEBUG - Operating System: win32
+19:07:10 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
+19:07:10 - sftp_logger - DEBUG - New SFTP Instance Created
+19:07:10 - sftp_logger - DEBUG - New SFTP Instance Created
+19:07:10 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:07:10 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:07:10 - sftp_logger - DEBUG - Authenticating with username: matt
+19:07:10 - sftp_logger - DEBUG - Authenticating with username: matt
+19:07:11 - sftp_logger - DEBUG - Creating SFTP client
+19:07:11 - sftp_logger - DEBUG - Creating SFTP client
+19:07:11 - sftp_logger - DEBUG - SFTP connection established successfully
+19:07:11 - sftp_logger - DEBUG - SFTP connection established successfully
+19:07:11 - sftp_logger - DEBUG - Operating System: win32
+19:07:11 - sftp_logger - DEBUG - Operating System: win32
+19:07:11 - sftp_logger - ERROR - Failed to download file  to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\ : [Errno 2] No such file or directory: 'C:\\Users\\mattt\\OneDrive\\Desktop\\Universe\\School\\CS_410\\CS410_Group2\\'
+19:07:11 - sftp_logger - ERROR - Failed to download file  to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\ : [Errno 2] No such file or directory: 'C:\\Users\\mattt\\OneDrive\\Desktop\\Universe\\School\\CS_410\\CS410_Group2\\'
+19:09:14 - sftp_logger - DEBUG - New SFTP Instance Created
+19:09:14 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:09:14 - sftp_logger - DEBUG - Authenticating with username: matt
+19:09:15 - sftp_logger - DEBUG - Creating SFTP client
+19:09:15 - sftp_logger - DEBUG - SFTP connection established successfully
+19:09:15 - sftp_logger - DEBUG - Operating System: win32
+19:09:15 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
+19:09:15 - sftp_logger - DEBUG - New SFTP Instance Created
+19:09:15 - sftp_logger - DEBUG - New SFTP Instance Created
+19:09:15 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:09:15 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:09:15 - sftp_logger - DEBUG - Authenticating with username: matt
+19:09:15 - sftp_logger - DEBUG - Authenticating with username: matt
+19:09:16 - sftp_logger - DEBUG - Creating SFTP client
+19:09:16 - sftp_logger - DEBUG - Creating SFTP client
+19:09:16 - sftp_logger - DEBUG - SFTP connection established successfully
+19:09:16 - sftp_logger - DEBUG - SFTP connection established successfully
+19:09:16 - sftp_logger - DEBUG - Operating System: win32
+19:09:16 - sftp_logger - DEBUG - Operating System: win32
+19:09:16 - sftp_logger - ERROR - Failed to download file  to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\ : [Errno 2] No such file or directory: 'C:\\Users\\mattt\\OneDrive\\Desktop\\Universe\\School\\CS_410\\CS410_Group2\\'
+19:09:16 - sftp_logger - ERROR - Failed to download file  to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\ : [Errno 2] No such file or directory: 'C:\\Users\\mattt\\OneDrive\\Desktop\\Universe\\School\\CS_410\\CS410_Group2\\'
+19:10:17 - sftp_logger - DEBUG - New SFTP Instance Created
+19:10:17 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:10:17 - sftp_logger - DEBUG - Authenticating with username: matt
+19:10:18 - sftp_logger - DEBUG - Creating SFTP client
+19:10:18 - sftp_logger - DEBUG - SFTP connection established successfully
+19:10:18 - sftp_logger - DEBUG - Operating System: win32
+19:10:18 - sftp_logger - DEBUG - Successfully downloaded test.txt to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\test.txt
+19:10:18 - sftp_logger - DEBUG - New SFTP Instance Created
+19:10:18 - sftp_logger - DEBUG - New SFTP Instance Created
+19:10:18 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:10:18 - sftp_logger - DEBUG - Connecting to babbage.cs.pdx.edu:22
+19:10:18 - sftp_logger - DEBUG - Authenticating with username: matt
+19:10:18 - sftp_logger - DEBUG - Authenticating with username: matt
+19:10:19 - sftp_logger - DEBUG - Creating SFTP client
+19:10:19 - sftp_logger - DEBUG - Creating SFTP client
+19:10:19 - sftp_logger - DEBUG - SFTP connection established successfully
+19:10:19 - sftp_logger - DEBUG - SFTP connection established successfully
+19:10:19 - sftp_logger - DEBUG - Operating System: win32
+19:10:19 - sftp_logger - DEBUG - Operating System: win32
+19:10:19 - sftp_logger - ERROR - Failed to download file  to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\ : [Errno 2] No such file or directory: 'C:\\Users\\mattt\\OneDrive\\Desktop\\Universe\\School\\CS_410\\CS410_Group2\\'
+19:10:19 - sftp_logger - ERROR - Failed to download file  to C:\Users\mattt\OneDrive\Desktop\Universe\School\CS_410\CS410_Group2\ : [Errno 2] No such file or directory: 'C:\\Users\\mattt\\OneDrive\\Desktop\\Universe\\School\\CS_410\\CS410_Group2\\'
