@@ -37,7 +37,7 @@ CONTENT_OBJ = {
 }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def content(sftpserver):
     with sftpserver.serve_content(deepcopy(CONTENT_OBJ)):
         yield

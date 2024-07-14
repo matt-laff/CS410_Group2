@@ -6,14 +6,14 @@ import src.sftp_client as sftp_client
 from conftest import DESTINATION_PATH, get_local_file_path
 
 @pytest.fixture(scope="session")
-def client(sftpserver):
+def client(sftpserver, content):
     sftpclient = sftp_client.SFTP(sftpserver.port, sftpserver.host, "stubUser", "stubPassword")
     sftpclient.connect() # Not sure if its better to do this here or in the fixture
     yield sftpclient
     del sftpclient
 
 
-def test_download_success(client, content):
+def test_download_success(client):
     local_file_path = get_local_file_path("test.txt")
 
     success = client.download("incoming/file1.txt", local_file_path)
