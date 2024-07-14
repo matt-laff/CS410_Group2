@@ -165,29 +165,12 @@ class SFTP:
 
     # Download from source_path on the remote server to destination_path on the local machine
     def download(self, source_path, destination_path):
-        self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
-        
-        # Maps the result of sys.platform to different delimiters for the path - necessary since windows uses \\ and linux/mac use / 
-        platform_map = {
-            "win32": "\\",
-            ("linux") or ("linux2"): "/",
-            "darwin": "/"
-        }
-        delim = platform_map[sys.platform]
-
         try:
-            source_tok = source_path.split('/') # Tokenize the source_path string to get the filename
-            if (destination_path == ''):
-                local = os.getcwd() + delim + source_tok[-1]  # Null entry from user - get current working directory, 
-                                                                # add the appropriate slash to it (delim), 
-                                                                # and get the name of the download file (source_tok[-1] is the last item in the source_path)
-            else:
-                local = destination_path + delim + source_tok[-1] # Otherwise user has to specify the filename when entering the path
-            self._SFTP.get(source_path, local) # All pa
-            self.print_debug(f"Successfully downloaded {source_tok[-1]} to {local}", None, True) 
+            self._SFTP.get(source_path, destination_path)
+            self.print_debug(f"Successfully downloaded {source_path} to {destination_path}", None, True) 
             return True
         except Exception as e:
-            self.print_error(f"Failed to download file {source_tok[-1]} to {local}", e, True)
+            self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
             return False
 
 
