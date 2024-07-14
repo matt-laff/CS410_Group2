@@ -1,7 +1,7 @@
 import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
-import LogHandler
-from LogHandler import setup_logger
+import src.log_handler as log_handler
+from src.log_handler import setup_logger
 import os
 import sys
 
