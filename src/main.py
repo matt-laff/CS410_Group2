@@ -1,5 +1,5 @@
-import SFTPClient
-import LogHandler
+import src.sftp_client as sftp_client
+import src.log_handler as log_handler
 import getpass
 import os
 import sys, getopt
@@ -24,7 +24,7 @@ def main():
     else:
         hostname, port, username, password = get_credentials(hostname, port, username, password)
 
-    sftp_client = SFTPClient.SFTP(port, hostname, username, password)
+    sftp_client = sftp_client.SFTP(port, hostname, username, password)
     sftp_client.connect()
 
 

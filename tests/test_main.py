@@ -2,7 +2,7 @@ import pytest
 import sys
 import os
 sys.path.append("..")
-import SFTPClient
+import src.sftp_client as sftp_client
 
 @pytest.fixture
 def credentials():
@@ -19,7 +19,7 @@ def credentials():
 @pytest.fixture
 def client(credentials):
     host,port,user,password = credentials
-    client = SFTPClient.SFTP(port, host, user, password)
+    client = sftp_client.SFTP(port, host, user, password)
     return client 
 
 
