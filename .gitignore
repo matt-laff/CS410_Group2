@@ -1,5 +1,6 @@
 # project specific
 credentials.txt
+SFTP_debug_error.log
 
 # general boilerplate
 # Byte-compiled / optimized / DLL files
