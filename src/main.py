@@ -1,5 +1,5 @@
-import src.sftp_client as sftp_client
-import src.log_handler as log_handler
+import sftp_client as sftp_client
+import log_handler as log_handler
 import getpass
 import os
 import sys, getopt
@@ -10,7 +10,13 @@ DEFAULT_PORT = 22
 DEFAULT_USER = "matt"
 
 def main():
+    
+    PARENT_DIR = os.path.dirname(os.getcwd())
+    TMP_PATH = os.path.join(PARENT_DIR, "tmp")
+    os.makedirs(TMP_PATH)
 
+    print(str(TMP_PATH))
+   
     hostname = None
     port = None
     username = None

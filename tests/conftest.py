@@ -8,13 +8,14 @@ from paramiko.sftp_client import SFTPClient
 
 from pytest_sftpserver.sftp.server import SFTPServer
 
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+TMP = os.path.join(os.getcwd(), "tmp") 
 
 DESTINATION_PATH="/tmp"
 if (sys.platform == "win32"):
     DESTINATION_PATH="tmp\\"
+
 
 
 CONTENT_OBJ = {
