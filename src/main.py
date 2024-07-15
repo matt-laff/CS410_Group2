@@ -1,16 +1,15 @@
-import src.sftp_client as sftp_client
-import src.log_handler as log_handler
+import sys
 import getpass
 import os
-import sys, getopt
 
+from src import SFTP, setup_logger
 
 DEFAULT_HOST = "babbage.cs.pdx.edu"
 DEFAULT_PORT = 22
 DEFAULT_USER = "matt"
 
 def main():
-
+    
     hostname = None
     port = None
     username = None
@@ -24,12 +23,11 @@ def main():
     else:
         hostname, port, username, password = get_credentials(hostname, port, username, password)
 
-    sftp_client = sftp_client.SFTP(port, hostname, username, password)
+    sftp_client = SFTP(port, hostname, username, password)
     sftp_client.connect()
 
-
     sftp_client.list_directory()
-
+    sftp_client.print_debug("Finished in main", None, True)
     return 
     
     source_path = input("Enter file to download: ")
