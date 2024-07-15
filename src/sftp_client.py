@@ -79,6 +79,7 @@ class SFTP:
         except Exception as e:
             self._debug_logger.error(f"Failed to cast port to int, exception {str(e)}")
             self._port = DEFAULT_PORT
+
         self._host = host
         self._username = username
         self._password = password
@@ -114,17 +115,25 @@ class SFTP:
     def connect(self):
 
         try:
+
+            # Initialize SSH transport layer for the connection.
             self._debug_logger.debug(f"Connecting to {self._host}:{self._port}")
             self._transport = paramiko.Transport((self._host, self._port))
             
             
+            # Establish the SSH connection using the transport layer.
             self._debug_logger.debug(f"Authenticating with username: {self._username}")
             self._transport.connect(None, self._username, self._password)
             
+             # Create an SFTP client instance for file operations.
             self._debug_logger.debug("Creating SFTP client")
             self._SFTP = paramiko.SFTPClient.from_transport(self._transport)
             
+
+
             self._debug_logger.debug("SFTP connection established successfully")
+
+
         #TODO: BadAuthenticationType???? 
         #TODO: GENERIC EXCPEITON HANDLING
         #! HOW ARE WE NOT CATCHING AN ERROR WITH THE CATCH ALL ----- UNDERSTADN---- "EXEPTION CHAINING"
@@ -135,12 +144,18 @@ class SFTP:
             if self._transport:
                 self._transport.close()
             
+            self._transport = None
+            self._SFTP = None
+
             return False, (f"Authentication failed: {str(e)}")
 
         except Exception as e:
             self._debug_logger.error(f"Unexpected error during SFTP connection: {str(e)}")
             if self._transport:
                 self._transport.close()
+
+            self._transport = None
+            self._SFTP = None
 
             return False,(f"Unexpected error during SFTP connection: {str(e)}")
 
