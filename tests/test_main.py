@@ -1,9 +1,10 @@
 import pytest
-import sys
 import os
 import shutil
-import src.sftp_client as sftp_client
-from conftest import DESTINATION_PATH, get_local_file_path, TMP
+from .conftest import DESTINATION_PATH, get_local_file_path, TMP
+
+from .context import src
+from src import sftp_client 
 
 
 @pytest.fixture(scope="session", autouse=True)
