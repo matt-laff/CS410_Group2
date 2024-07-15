@@ -13,6 +13,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 
 DESTINATION_PATH="/tmp"
+if (sys.platform == "win32"):
+    DESTINATION_PATH="tmp\\"
+
+
 CONTENT_OBJ = {
     "incoming": {
         "file1.txt": "file1",
