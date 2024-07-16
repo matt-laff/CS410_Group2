@@ -1,9 +1,20 @@
 import pytest
-import sys
 import os
-sys.path.append("..")
-import src.sftp_client as sftp_client
-from conftest import DESTINATION_PATH, get_local_file_path
+import shutil
+from .conftest import get_local_file_path, TMP
+
+from .context import src
+from src import sftp_client 
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup():
+    os.makedirs(TMP)
+
+@pytest.fixture(scope="session", autouse=True)
+def teardown():
+    yield
+    shutil.rmtree(TMP)
 
 @pytest.fixture(scope="session")
 def client(sftpserver, content):

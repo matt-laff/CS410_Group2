@@ -1,9 +1,7 @@
 import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
-import src.log_handler as log_handler
-from src.log_handler import setup_logger
-import os
-import sys
+
+from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
 

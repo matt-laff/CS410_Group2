@@ -5,14 +5,13 @@ from copy import deepcopy
 from paramiko import Transport
 from paramiko.channel import Channel
 from paramiko.sftp_client import SFTPClient
-
 from pytest_sftpserver.sftp.server import SFTPServer
 
+#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+TMP = os.path.join(os.getcwd(), "tmp") 
 
 
-DESTINATION_PATH="/tmp"
 CONTENT_OBJ = {
     "incoming": {
         "file1.txt": "file1",
@@ -45,7 +44,7 @@ def content(sftpserver):
 
 def get_local_file_path(file_name):
     # Need to find a better name for this method that implies side effects.
-    local_file_path = os.path.join(DESTINATION_PATH, file_name)
+    local_file_path = os.path.join(TMP, file_name)
     if (os.path.isfile(local_file_path)):
         os.remove(local_file_path)
     file_exists = os.path.isfile(local_file_path)
