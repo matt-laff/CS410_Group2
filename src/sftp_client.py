@@ -1,6 +1,7 @@
 import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
-
+import sys
+import os
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
@@ -175,6 +176,32 @@ class SFTP:
         except IOError as e:
             print(f"Failed to list directory: {e}")
 
+    def list_full(self):
+        if self._SFTP is None:
+            self.print_debug("Not connected to a server, list_full() failed", None, False) 
+            return
+        
+        try:
+            directory_contents = self._SFTP.listdir_attr()
+            for item in directory_contents:
+                print(item)
+        except IOError as e:
+            print(f"Failed to list directory: {e}")
+
+
+    def download_all(self, remote_path_list, local_path_list):
+        success = False
+        if (len(local_path_list) == 0): # Empty local path, default to current directory
+            self.print_debug("Empty local_path_list, building local_path", None, False)
+            for path in remote_path_list:
+                local_path = self.remote_to_local(path)
+                self.print_debug(f"Local path: {local_path}", None, False)
+                success = self.download(path, local_path)
+        else:
+            for remote_path, local_path in zip(remote_path_list, local_path_list):
+                success = self.download(remote_path, local_path)
+        return success
+
 
     # Download from source_path on the remote server to destination_path on the local machine
     def download(self, source_path, destination_path):
@@ -183,8 +210,33 @@ class SFTP:
             self.print_debug(f"Successfully downloaded {source_path} to {destination_path}", None, True) 
             return True
         except Exception as e:
+            if (os.path.isfile(destination_path)):
+                os.remove(destination_path)
             self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
             return False
+
+
+    def remote_to_local(self, remote_path):
+        self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
+        
+        # Maps the result of sys.platform to different delimiters for the path - necessary since windows uses \\ and linux/mac use / 
+        platform_map = {
+            "win32": "\\",
+            ("linux") or ("linux2"): "/",
+            "darwin": "/"
+        }
+        delim = platform_map[sys.platform]
+
+        try:
+            source_tok = remote_path.split('/') # Tokenize the source_path string to get the filename
+            local_path = os.getcwd() + delim + source_tok[-1] 
+            self.print_debug(f"Remote path from remote_to_local(): {remote_path}", None, False)
+            self.print_debug(f"Local path from remote_to_local(): {local_path}", None, False)
+            return local_path
+
+        except Exception as e:
+            self.print_error(f"Failed to download file {source_tok[-1]} to {local_path}", e, True)
+            return None
 
 
     def print_debug(self, message, e, out):
