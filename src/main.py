@@ -43,9 +43,6 @@ def main():
     else:
         local_file_list = list()
 
-    print(remote_file_list)
-    print(local_file_list)
-
 
     sftp_client.download_all(remote_file_list, local_file_list)
 

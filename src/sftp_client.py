@@ -207,17 +207,17 @@ class SFTP:
     def download(self, source_path, destination_path):
         try:
             self._SFTP.get(source_path, destination_path)
-            self.print_debug(f"Successfully downloaded {source_path} to {destination_path}", None, True) 
+            self._debug_logger.debug(f"Successfully downloaded {source_path} to {destination_path}")
             return True
         except Exception as e:
             if (os.path.isfile(destination_path)):
                 os.remove(destination_path)
-            self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
+            self._debug_logger.error(f"Failed to download file {source_path} to {destination_path} : {e}")
             return False
 
 
     def remote_to_local(self, remote_path):
-        self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
+        self._debug_logger.debug(f"Operating System: {sys.platform}")
         
         # Maps the result of sys.platform to different delimiters for the path - necessary since windows uses \\ and linux/mac use / 
         platform_map = {
@@ -230,12 +230,12 @@ class SFTP:
         try:
             source_tok = remote_path.split('/') # Tokenize the source_path string to get the filename
             local_path = os.getcwd() + delim + source_tok[-1] 
-            self.print_debug(f"Remote path from remote_to_local(): {remote_path}", None, False)
-            self.print_debug(f"Local path from remote_to_local(): {local_path}", None, False)
+            self._debug_logger.debug(f"Remote path from remote_to_local(): {remote_path}")
+            self._debug_logger.debug(f"Local path from remote_to_local(): {local_path}")
             return local_path
 
         except Exception as e:
-            self.print_error(f"Failed to download file {source_tok[-1]} to {local_path}", e, True)
+            self._debug_logger.error(f"Failed to download file {source_tok[-1]} to {local_path} : {e}")
             return None
 
 

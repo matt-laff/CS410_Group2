@@ -10,6 +10,8 @@ right click start menu -> System -> Advanced settings -> Environment Variables
 System Variables -> edit PATH -> add path to Python<version #>/Scripts folder to PATH
 
 (in terminal - I have the venv in the directory above the project folder) virtualenv venv 
+ 
+!! If you encounter a scripts permission error, follow the steps here: https://stackoverflow.com/questions/18713086/virtualenv-wont-activate-on-windows !!
 
 venv/Scripts/activate
 
