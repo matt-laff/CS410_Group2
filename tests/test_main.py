@@ -48,7 +48,7 @@ def test_download_failure(client):
 
 ############ Download Multiple Tests ############
 
-def test_download_all_success(client):
+def test_download_all_success_local_supplied(client):
 
     local_file_list = list()
     local_file_list.append(get_local_file_path("test1.txt"))
@@ -76,7 +76,12 @@ def test_download_all_success(client):
     assert(success == True)
 
 
-def test_download_all_failure(client):
+#TODO: Need to set up a way for user to specify default download folder
+def test_download_all_success_local_supplied(client):
+    pass
+
+
+def test_download_all_failure_local_supplied(client):
 
     local_file_list = list()
     local_file_list.append(get_local_file_path("test1.txt"))
@@ -93,6 +98,32 @@ def test_download_all_failure(client):
     file1_exists = os.path.isfile(local_file_list[0])
     file2_exists = os.path.isfile(local_file_list[1])
     file3_exists = os.path.isfile(local_file_list[2])
+
+    
+    assert(file1_exists == False)
+    assert(file2_exists == False)
+    assert(file3_exists == False)
+    assert(success == False)
+
+def test_download_all_failure_local_not_supplied(client):
+
+    local_file_list = list() # Empty list == default download location
+
+
+    local_file1 = get_local_file_path("test1.txt")
+    local_file2 = get_local_file_path("test2.txt")
+    local_file3 = get_local_file_path("test3.txt")
+
+    remote_file_list = list()
+    remote_file_list.append("nonexistant1.txt")
+    remote_file_list.append("nonexistant2.txt")
+    remote_file_list.append("nonexistant3.txt")
+
+    success = client.download_all(remote_file_list, local_file_list)
+
+    file1_exists = os.path.isfile(local_file1)
+    file2_exists = os.path.isfile(local_file2)
+    file3_exists = os.path.isfile(local_file3)
 
     
     assert(file1_exists == False)
