@@ -6,7 +6,7 @@ from src import SFTP, setup_logger
 
 DEFAULT_HOST = "babbage.cs.pdx.edu"
 DEFAULT_PORT = 22
-DEFAULT_USER = "matt"
+DEFAULT_USER = "ilopez"
 
 def main():
     
@@ -25,7 +25,7 @@ def main():
 
     sftp_client = SFTP(port, hostname, username, password)
     sftp_client.connect()
-
+ 
     sftp_client.list_directory()
     sftp_client.print_debug("Finished in main", None, True)
     return 

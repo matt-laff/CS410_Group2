@@ -186,6 +186,19 @@ class SFTP:
             self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
             return False
 
+    #Create directory on remote server
+    def mkdir(self, dir_name):
+        if self._SFTP is None:
+            print("Not connected to an SFTP Server.")
+            return 
+        try:
+            self._SFTP.mkdir(dir_name, mode=511)
+            self.print_debug(f"Successfully created directory {dir_name}", None, True)
+            return True
+        except Exception as e:
+            self.print_error(f"Failed to make directory {dir_name}", e, True)        
+            return False
+
 
     def print_debug(self, message, e, out):
         if (e == None):
