@@ -48,6 +48,7 @@ def test_download_failure(client):
 
 ############ Download Multiple Tests ############
 
+# Test successful download of multiple files with local path provided
 def test_download_all_success(client):
 
     local_file_list = list()
@@ -75,8 +76,8 @@ def test_download_all_success(client):
     assert(file3_exists == True)
     assert(success == True)
 
-
-def test_download_all_failure(client):
+# Test nonexistant download files results in failure
+def test_download_all_failure_nonexistant(client):
 
     local_file_list = list()
     local_file_list.append(get_local_file_path("test1.txt"))
@@ -98,4 +99,24 @@ def test_download_all_failure(client):
     assert(file1_exists == False)
     assert(file2_exists == False)
     assert(file3_exists == False)
+    assert(success == False)
+
+
+# Test to make sure download_all fails on mismatched list lengths
+def test_download_all_failure_bad_length(client):
+
+    local_file_list = list()
+    local_file_list.append(get_local_file_path("test1.txt"))
+    local_file_list.append(get_local_file_path("test2.txt"))
+
+    remote_file_list = list()
+    remote_file_list.append("incoming/file1.txt")
+
+    success = client.download_all(remote_file_list, local_file_list)
+
+    file1_exists = os.path.isfile(local_file_list[0])
+    file2_exists = os.path.isfile(local_file_list[1])
+    
+    assert(file1_exists == False)
+    assert(file2_exists == False)
     assert(success == False)

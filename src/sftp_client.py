@@ -47,6 +47,9 @@ class SFTP:
         self._username = None
         self._password = None
 
+        # Download path
+        self._download_location = None
+
          # Initialize connection objects
         self._transport = None
         self._SFTP = None
@@ -69,6 +72,8 @@ class SFTP:
         self._transport = to_copy._transport
         self._SFTP = to_copy._SFTP
 
+        # Download path
+        self._download_location = to_copy._download_location
 
 
     #Param constructor
@@ -110,6 +115,8 @@ class SFTP:
         self._transport = None
         self._SFTP = None
 
+        # Download path
+        self._download_location = None
 
     def connect(self):
 
@@ -197,7 +204,7 @@ class SFTP:
                 local_path = self.remote_to_local(path)
                 self.print_debug(f"Local path: {local_path}", None, False)
                 success = self.download(path, local_path)
-        else:
+        elif (len(local_path_list) == len(remote_path_list)):
             for remote_path, local_path in zip(remote_path_list, local_path_list):
                 success = self.download(remote_path, local_path)
         return success
@@ -216,6 +223,16 @@ class SFTP:
             return False
 
 
+    def set_download_location(self, download_path):
+        try:
+            self._download_location = download_path
+            assert(os.path.isdir(download_path))
+            self._debug_logger.debug(f"Successfully set download location: {e}")
+        except Exception as e:
+            self._debug_logger.debug(f"Failed to set download location: {e}")
+
+
+    # Helper function to convert remote formatting to local system formatting
     def remote_to_local(self, remote_path):
         self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
         
@@ -229,9 +246,14 @@ class SFTP:
 
         try:
             source_tok = remote_path.split('/') # Tokenize the source_path string to get the filename
-            local_path = os.getcwd() + delim + source_tok[-1] 
-            self.print_debug(f"Remote path from remote_to_local(): {remote_path}", None, False)
-            self.print_debug(f"Local path from remote_to_local(): {local_path}", None, False)
+
+            if (self._download_location != None): 
+                local_path = self._download_location + delim + source_tok[-1] 
+            else:
+                local_path = os.getcwd() + delim + source_tok[-1] 
+            
+            self._debug_logger.debug(f"Remote path from remote_to_local(): {remote_path}")
+            self._debug_logger.debug(f"Local path from remote_to_local(): {local_path}")
             return local_path
 
         except Exception as e:

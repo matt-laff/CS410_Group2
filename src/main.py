@@ -27,12 +27,7 @@ def main():
     sftp_client.connect()
 
     sftp_client.list_directory()
-    sftp_client.print_debug("Finished in main", None, True)
 
-
-   # local_path = sftp_client.remote_to_local("/u/matt/test.txt") 
-   # print(local_path)
-    
     remote_file_str= input("Enter the files you want to download, separated by a space:\n")
     remote_file_list = remote_file_str.split(' ')
 
@@ -43,9 +38,7 @@ def main():
     else:
         local_file_list = list()
 
-    print(remote_file_list)
-    print(local_file_list)
-
+    sftp_client.set_download_location("C:\\Users\\mattt\\Downloads")
 
     sftp_client.download_all(remote_file_list, local_file_list)
 
