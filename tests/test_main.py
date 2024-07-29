@@ -1,7 +1,7 @@
 import pytest
 import os
 import shutil
-from .conftest import DESTINATION_PATH, get_local_file_path, TMP
+from .conftest import get_local_file_path, TMP
 
 from .context import src
 from src import sftp_client 

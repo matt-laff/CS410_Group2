@@ -11,11 +11,6 @@ from pytest_sftpserver.sftp.server import SFTPServer
 
 TMP = os.path.join(os.getcwd(), "tmp") 
 
-DESTINATION_PATH="/tmp"
-if (sys.platform == "win32"):
-    DESTINATION_PATH="tmp\\"
-
-
 
 CONTENT_OBJ = {
     "incoming": {
@@ -49,7 +44,7 @@ def content(sftpserver):
 
 def get_local_file_path(file_name):
     # Need to find a better name for this method that implies side effects.
-    local_file_path = os.path.join(DESTINATION_PATH, file_name)
+    local_file_path = os.path.join(TMP, file_name)
     if (os.path.isfile(local_file_path)):
         os.remove(local_file_path)
     file_exists = os.path.isfile(local_file_path)
