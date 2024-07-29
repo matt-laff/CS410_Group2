@@ -48,8 +48,14 @@ def test_download_failure(client):
 
 ############ Download Multiple Tests ############
 
+# Download location helper test
+def test_set_download_location(client):
+     assert(client._download_location == None)
+     client.set_download_location("some/path")
+     assert(client._download_location == "some/path")
+
 # Test successful download of multiple files with local path provided
-def test_download_all_success(client):
+def test_download_all_success_no_download_location(client):
 
     local_file_list = list()
     local_file_list.append(get_local_file_path("test1.txt"))
@@ -75,6 +81,39 @@ def test_download_all_success(client):
     assert(file2_exists == True)
     assert(file3_exists == True)
     assert(success == True)
+
+
+# Test successful download of multiple files with no local path provided
+def test_download_all_success_with_download_location(client):
+
+    local_file_list = list()
+
+    remote_file_list = list()
+    remote_file_list.append("incoming/file1.txt")
+    remote_file_list.append("incoming/file2.txt")
+    remote_file_list.append("incoming/subdirectory/file3.txt")
+
+    client.set_download_location("tmp\\")
+    success = client.download_all(remote_file_list, local_file_list)
+
+    file1_exists = os.path.isfile("tmp\\file1.txt")
+    file2_exists = os.path.isfile("tmp\\file2.txt")
+    file3_exists = os.path.isfile("tmp\\file3.txt")
+
+    local_file_list.append("tmp\\file1.txt")
+    local_file_list.append("tmp\\file2.txt")
+    local_file_list.append("tmp\\file3.txt")
+
+    for i in range(3):
+       with open(local_file_list[i], 'r') as file:
+                assert(file.read() == f"file{i+1}")
+    
+    assert(file1_exists == True)
+    assert(file2_exists == True)
+    assert(file3_exists == True)
+    assert(success == True)
+
+
 
 # Test nonexistant download files results in failure
 def test_download_all_failure_nonexistant(client):
