@@ -2,10 +2,14 @@ import pytest
 import os
 import shutil
 from unittest.mock import MagicMock, patch
-from .conftest import get_local_file_path, TMP
+from .conftest import get_local_file_path, TMP, CONTENT_OBJ
 from .context import src
 from src import sftp_client 
 
+from paramiko import Transport
+from paramiko.channel import Channel
+from paramiko.sftp_client import SFTPClient
+from pytest_sftpserver.sftp.server import SFTPServer
 
 @pytest.fixture(scope="session", autouse=True)
 def setup():
@@ -178,3 +182,105 @@ def test_put(mock_client):
     mock_client.put.assert_called_once_with("/tmp/local.txt", "/tmp/remote.txt")
 
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                             Connect (Nolan)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+#                     Configuration
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+
+@pytest.fixture(scope="function")
+def client_connect_tests(sftpserver, content):
+    sftpclient = sftp_client.SFTP(sftpserver.port, sftpserver.host, "stubUser", "stubPassword")
+    return sftpclient
+
+
+Authentication_Failed = ("Authentication failed: Bad authentication type; allowed types: ['publickey',"
+                          "'gssapi-keyex', 'gssapi-with-mic', 'keyboard-interactive', 'hostbased']")
+
+Port_Failed = "Unexpected error during SFTP connection: connect(): port must be 0-65535."
+
+bad_host= bad_port = bad_username= bad_password = "dad"
+
+
+
+#==============================================================#
+#TEST: Initialize SSH transport layer for the connection.
+#==============================================================#
+def test_transport_connection_established_successfully(client_connect_tests):
+    client_connect_tests.connect()
+    transport_success = client_connect_tests._transport
+    assert transport_success is not None
+
+def test_host_failure(client_connect_tests):
+    client_connect_tests._port = bad_port
+    transport_failure = client_connect_tests.connect() 
+    assert((transport_failure[0]== False))
+
+def test_port_failure(client_connect_tests):
+    client_connect_tests._port = bad_port
+    transport_failure = client_connect_tests.connect() 
+    assert((transport_failure[0]== False))
+
+#==============================================================#
+# TEST: the SSH connection using the transport layer.
+#==============================================================#
+def test_ssh_connection_established_successfully(client_connect_tests):
+    client_connect_tests.connect()
+    ssh_success = client_connect_tests._transport
+    assert(ssh_success != None)
+
+def test_ssh_authentication_failure_username(client_connect_tests):
+    client_connect_tests._username =  None
+    auth_failure = client_connect_tests.connect() 
+    assert((auth_failure[0]== False))
+
+def test_ssh_authentication_failure_password(client_connect_tests):
+    client_connect_tests._password = None
+    auth_failure = client_connect_tests.connect()
+    assert((auth_failure[0]== False))
+
+#==============================================================#
+#TEST: Create an SFTP client instance for file operations.
+#==============================================================#
+def test_sftp_client_connection_established_successfully(client_connect_tests):
+    sftp_client_connection_success = client_connect_tests.connect() 
+    assert(sftp_client_connection_success == (True, "Connection Successful"))
+
+def test_sftp_client_value_correct(client_connect_tests):
+    client_connect_tests.connect()
+    sftp_value = client_connect_tests._SFTP
+    assert(sftp_value != None)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                  List Directory Contents(Nolan)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+def test_list_directory_current(client, content, capsys):
+    client.list_directory()
+    captured = capsys.readouterr()
+    for root_dir in CONTENT_OBJ.keys():
+        assert root_dir in captured.out
+
+
+def test_list_directory_failure(capsys):
+    disconnected_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
+    disconnected_client.list_directory()
+    captured = capsys.readouterr()
+    assert "Not connected to an SFTP server." in captured.out
+
+
+#TODO: MAYBE ADD A TEST FOR PERMISION ERRORS??????
