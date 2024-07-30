@@ -26,7 +26,7 @@ class SFTP:
         # This allows us to dynamically choose which function to execute based on the number of arguments.
         action_map = {
             0: self._default_constructor(),
-            1: lambda: self._copy_constructor(*args),  # Wrap the call in a lambda to pass args
+            1: lambda: self._sftp_client_DI_constructor(*args),  # Wrap the call in a lambda to pass args
             4: lambda: self._param_constructor(*args)  # Wrap the call in a lambda to pass args
         }
 
@@ -55,25 +55,14 @@ class SFTP:
         self._SFTP = None
 
 
-    #Copy constructor
-    def _copy_constructor(self,to_copy):
+    # Dependency injection of the SFTPClient for unit testing
+    def _sftp_client_DI_constructor(self,sftp_client):
 
-        #Copy constructor object to copy from must be of type SFTP.
-        if type(to_copy) != SFTP: 
-            raise ValueError("Type of to_copy is not SFTP in copy constructor")
+        # When passing in a mock, the type is <MagicMock name='SFTPClient()' id='4422325904'>
+        # if type(sftp_client) != paramiko.SFTPClient: 
+        #     raise ValueError("Type of sftp_client is not SFTPClient in single arg constructor")
 
-        # Store & initialize connection parameters connection parameters
-        self._port = to_copy._port 
-        self._host = to_copy._host
-        self._username = to_copy._username
-        self._password = to_copy._password
-
-         # Initialize connection objects
-        self._transport = to_copy._transport
-        self._SFTP = to_copy._SFTP
-
-        # Download path
-        self._download_location = to_copy._download_location
+        self._SFTP = sftp_client
 
 
     #Param constructor
@@ -222,6 +211,21 @@ class SFTP:
             self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
             return False
 
+    # Remove the directory at the remote path
+    def rmdir(self, remote_path):
+        try:
+            self._SFTP.rmdir(remote_path)
+            self.print_debug(f"Successsfully removed directory at {remote_path}")
+        except Exception as e:
+            self.print_error(f"Failed to remove directory at {remote_path}", e)
+    
+    # Copy a local file (local_path) to the SFTP server as remote_path
+    def put(self, local_path, remote_path):
+        try:
+            self._SFTP.put(local_path, remote_path)
+            self.print_debug(f"Successfully copied {local_path} to {remote_path}")
+        except Exception as e:
+            self.print_error(f"Failed to copy {local_path} to {remote_path}")
 
     def set_download_location(self, download_path):
         try:
@@ -261,7 +265,7 @@ class SFTP:
             return None
 
 
-    def print_debug(self, message, e, out):
+    def print_debug(self, message, e = None, out = True):
         if (e == None):
             if (out == True):
                 print(message)
@@ -272,7 +276,7 @@ class SFTP:
             self._debug_logger.debug(f"{message} : {e}")
         
     
-    def print_error(self, message, e, out):
+    def print_error(self, message, e, out = True):
         if (e == None):
             if (out == True):
                 print(message)

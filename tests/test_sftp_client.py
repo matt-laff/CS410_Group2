@@ -1,8 +1,8 @@
 import pytest
 import os
 import shutil
+from unittest.mock import MagicMock, patch
 from .conftest import get_local_file_path, TMP
-
 from .context import src
 from src import sftp_client 
 
@@ -12,19 +12,26 @@ def setup():
     os.makedirs(TMP)
 
 @pytest.fixture(scope="session", autouse=True)
-def teardown():
+def teardown(client):
     yield
     shutil.rmtree(TMP)
+    del client
 
+# In memory client for unit/integration tests
 @pytest.fixture(scope="session")
 def client(sftpserver, content):
     sftpclient = sftp_client.SFTP(sftpserver.port, sftpserver.host, "stubUser", "stubPassword")
-    sftpclient.connect() # Not sure if its better to do this here or in the fixture
-    yield sftpclient
-    del sftpclient
+    sftpclient.connect()
+    #yield sftpclient   #! This stalls out my terminal on test failures
+    #del sftpclient
+    return sftpclient
 
-
-############ Download Tests ############
+# Mock client for purely unit testing
+@pytest.fixture(scope="session")
+def mock_client():
+    with patch('paramiko.SFTPClient') as mock:
+        mock_instance = mock.return_value
+        yield mock_instance
 
 def test_download_success(client):
     local_file_path = get_local_file_path("test.txt")
@@ -44,7 +51,6 @@ def test_download_failure(client):
     file_exists = os.path.isfile(local_file_path)
     assert(file_exists == False)
     assert(success == False)
-
 
 ############ Download Multiple Tests ############
 
@@ -159,3 +165,16 @@ def test_download_all_failure_bad_length(client):
     assert(file1_exists == False)
     assert(file2_exists == False)
     assert(success == False)
+
+
+def test_rmdir(mock_client):
+    client = sftp_client.SFTP(mock_client)
+    client.rmdir("/tmp")
+    mock_client.rmdir.assert_called_once_with("/tmp")
+
+def test_put(mock_client):
+    client = sftp_client.SFTP(mock_client)
+    client.put("/tmp/local.txt", "/tmp/remote.txt")
+    mock_client.put.assert_called_once_with("/tmp/local.txt", "/tmp/remote.txt")
+
+
