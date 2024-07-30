@@ -27,16 +27,22 @@ def main():
     sftp_client.connect()
 
     sftp_client.list_directory()
-    sftp_client.print_debug("Finished in main", None, True)
+
+    remote_file_str= input("Enter the files you want to download, separated by a space:\n")
+    remote_file_list = remote_file_str.split(' ')
+
+    local_file_str = input("Enter the file locations, separated by a space:\n")
+
+    if (local_file_str != ""):
+        local_file_list = local_file_str.split(' ')
+    else:
+        local_file_list = list()
+
+    sftp_client.set_download_location("C:\\Users\\mattt\\Downloads")
+
+    sftp_client.download_all(remote_file_list, local_file_list)
+
     return 
-    
-    source_path = input("Enter file to download: ")
-
-    print("Current Local Path: " + str(os.getcwd()))
-    dest_path = input("Enter location to save file: ")
-
-    sftp_client.download(source_path, dest_path)
-
 
 
 def get_credentials(hostname, port, username, password):

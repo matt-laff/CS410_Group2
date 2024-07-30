@@ -45,7 +45,7 @@ def setup_logger(name, log_file):
     logger.setLevel(logging.DEBUG)
 
     # Create a formatter for log messages
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', "%H:%M:%S")
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(filename)s - %(funcName)s - %(lineno)d', "%H:%M:%S")
 
     # Create an instance of our custom DebugErrorHandler
     debug_error_handler = DebugErrorHandler(log_file)
