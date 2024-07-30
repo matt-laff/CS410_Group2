@@ -1,6 +1,7 @@
 import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
-
+import sys
+import os
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
@@ -25,7 +26,7 @@ class SFTP:
         # This allows us to dynamically choose which function to execute based on the number of arguments.
         action_map = {
             0: self._default_constructor(),
-            1: lambda: self._copy_constructor(*args),  # Wrap the call in a lambda to pass args
+            1: lambda: self._sftp_client_DI_constructor(*args),  # Wrap the call in a lambda to pass args
             4: lambda: self._param_constructor(*args)  # Wrap the call in a lambda to pass args
         }
 
@@ -46,28 +47,22 @@ class SFTP:
         self._username = None
         self._password = None
 
+        # Download path
+        self._download_location = None
+
          # Initialize connection objects
         self._transport = None
         self._SFTP = None
 
 
-    #Copy constructor
-    def _copy_constructor(self,to_copy):
+    # Dependency injection of the SFTPClient for unit testing
+    def _sftp_client_DI_constructor(self,sftp_client):
 
-        #Copy constructor object to copy from must be of type SFTP.
-        if type(to_copy) != SFTP: 
-            raise ValueError("Type of to_copy is not SFTP in copy constructor")
+        # When passing in a mock, the type is <MagicMock name='SFTPClient()' id='4422325904'>
+        # if type(sftp_client) != paramiko.SFTPClient: 
+        #     raise ValueError("Type of sftp_client is not SFTPClient in single arg constructor")
 
-        # Store & initialize connection parameters connection parameters
-        self._port = to_copy._port 
-        self._host = to_copy._host
-        self._username = to_copy._username
-        self._password = to_copy._password
-
-         # Initialize connection objects
-        self._transport = to_copy._transport
-        self._SFTP = to_copy._SFTP
-
+        self._SFTP = sftp_client
 
 
     #Param constructor
@@ -109,6 +104,8 @@ class SFTP:
         self._transport = None
         self._SFTP = None
 
+        # Download path
+        self._download_location = None
 
     def connect(self):
 
@@ -175,6 +172,32 @@ class SFTP:
         except IOError as e:
             print(f"Failed to list directory: {e}")
 
+    def list_full(self):
+        if self._SFTP is None:
+            self.print_debug("Not connected to a server, list_full() failed", None, False) 
+            return
+        
+        try:
+            directory_contents = self._SFTP.listdir_attr()
+            for item in directory_contents:
+                print(item)
+        except IOError as e:
+            print(f"Failed to list directory: {e}")
+
+
+    def download_all(self, remote_path_list, local_path_list):
+        success = False
+        if (len(local_path_list) == 0): # Empty local path, default to current directory
+            self.print_debug("Empty local_path_list, building local_path", None, False)
+            for path in remote_path_list:
+                local_path = self.remote_to_local(path)
+                self.print_debug(f"Local path: {local_path}", None, False)
+                success = self.download(path, local_path)
+        elif (len(local_path_list) == len(remote_path_list)):
+            for remote_path, local_path in zip(remote_path_list, local_path_list):
+                success = self.download(remote_path, local_path)
+        return success
+
 
     # Download from source_path on the remote server to destination_path on the local machine
     def download(self, source_path, destination_path):
@@ -183,11 +206,66 @@ class SFTP:
             self.print_debug(f"Successfully downloaded {source_path} to {destination_path}", None, True) 
             return True
         except Exception as e:
+            if (os.path.isfile(destination_path)):
+                os.remove(destination_path)
             self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
             return False
 
+    # Remove the directory at the remote path
+    def rmdir(self, remote_path):
+        try:
+            self._SFTP.rmdir(remote_path)
+            self.print_debug(f"Successsfully removed directory at {remote_path}")
+        except Exception as e:
+            self.print_error(f"Failed to remove directory at {remote_path}", e)
+    
+    # Copy a local file (local_path) to the SFTP server as remote_path
+    def put(self, local_path, remote_path):
+        try:
+            self._SFTP.put(local_path, remote_path)
+            self.print_debug(f"Successfully copied {local_path} to {remote_path}")
+        except Exception as e:
+            self.print_error(f"Failed to copy {local_path} to {remote_path}")
 
-    def print_debug(self, message, e, out):
+    def set_download_location(self, download_path):
+        try:
+            self._download_location = download_path
+            assert(os.path.isdir(download_path))
+            self._debug_logger.debug(f"Successfully set download location: {e}")
+        except Exception as e:
+            self._debug_logger.debug(f"Failed to set download location: {e}")
+
+
+    # Helper function to convert remote formatting to local system formatting
+    def remote_to_local(self, remote_path):
+        self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
+        
+        # Maps the result of sys.platform to different delimiters for the path - necessary since windows uses \\ and linux/mac use / 
+        platform_map = {
+            "win32": "\\",
+            ("linux") or ("linux2"): "/",
+            "darwin": "/"
+        }
+        delim = platform_map[sys.platform]
+
+        try:
+            source_tok = remote_path.split('/') # Tokenize the source_path string to get the filename
+
+            if (self._download_location != None): 
+                local_path = self._download_location + delim + source_tok[-1] 
+            else:
+                local_path = os.getcwd() + delim + source_tok[-1] 
+            
+            self._debug_logger.debug(f"Remote path from remote_to_local(): {remote_path}")
+            self._debug_logger.debug(f"Local path from remote_to_local(): {local_path}")
+            return local_path
+
+        except Exception as e:
+            self.print_error(f"Failed to download file {source_tok[-1]} to {local_path}", e, True)
+            return None
+
+
+    def print_debug(self, message, e = None, out = True):
         if (e == None):
             if (out == True):
                 print(message)
@@ -198,7 +276,7 @@ class SFTP:
             self._debug_logger.debug(f"{message} : {e}")
         
     
-    def print_error(self, message, e, out):
+    def print_error(self, message, e, out = True):
         if (e == None):
             if (out == True):
                 print(message)
