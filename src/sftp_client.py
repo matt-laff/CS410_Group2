@@ -161,8 +161,7 @@ class SFTP:
     #Lists the contents of the current directory on the remote server.
     def list_directory(self):
         if self._SFTP is None:
-            print("Not connected to an SFTP server.")
-            return False
+            return False, ("Not connected to an SFTP server")
         
         try:
             # Assuming self._SFTP is an instance of paramiko.SFTPClient
@@ -170,10 +169,28 @@ class SFTP:
             for item in directory_contents:
                 print(item)
         except IOError as e:
-            print(f"Failed to list directory: {e}")
-            return False
+            return (False , (f"Failed to list directory: {e}"))
         
         return True
+
+    # Changes the permissions of a file or directory on the remote server
+    def change_permissions(self, remote_path, mode):
+        try:
+            # Ensure self._SFTP is initialized and connected
+            if self._SFTP is None:
+                return (False, ("Not connected to an SFTP server"))
+
+            # Change the permissions
+            # Use chmod method of SFTPClient instance to change the permissions of a file/directory on the remote server
+            self._SFTP.chmod(remote_path, mode)
+
+            print(f"Permissions changed for {remote_path}")
+            return True
+
+        except IOError as e:
+            return ( False, (f"Failed to change permissions for {remote_path}: {e}"))
+        
+
 
     def list_full(self):
         if self._SFTP is None:

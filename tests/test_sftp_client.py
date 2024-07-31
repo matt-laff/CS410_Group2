@@ -272,17 +272,71 @@ def test_sftp_client_value_correct(client_connect_tests):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 def test_list_directory_current(client, content, capsys):
-    client.list_directory()
+    success = client.list_directory()
     captured = capsys.readouterr()
     for root_dir in CONTENT_OBJ.keys():
         assert root_dir in captured.out
+    assert success == True
 
 
-def test_list_directory_failure(capsys):
+def test_list_directory_failure_not_connected_to_SFTP_server():
     disconnected_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
-    disconnected_client.list_directory()
-    captured = capsys.readouterr()
-    assert "Not connected to an SFTP server." in captured.out
+    captured = disconnected_client.list_directory()
+    assert ((captured[0]== False) and (captured[1]=="Not connected to an SFTP server"))
+
+def test_list_directory_failure_due_to_permissions(client):
+    remote_path = "incoming"
+    new_mode = 0o000  # No permissions for anyone
+    
+    # Change directory permissions to remove read access
+    success = client.change_permissions(remote_path, new_mode)
+    assert success == True
+    local = os.path.join(TMP, remote_path) 
+    os.stat(local)
+    
+
+    # Convert remote path to local path, assuming the mock server mirrors the local filesystem
+    local_path = os.path.join(TMP, remote_path)  # Assuming TMP is the base directory for the mock server's filesystem
+    
+    
+    # Get the file's current permissions
+    actual_mode = os.stat(local_path).st_mode & 0o777  # Extract the permission bits, masking to compare only the relevant ones
+    expected_mode = new_mode & 0o777  # Mask to compare only the relevant permission bits
+    
+    assert actual_mode == expected_mode, "Permissions were not changed as expected."
+    
+    captured = client.list_directory()
+
+    assert captured==True 
+    #assert ((captured[0]== False) and (captured[1]=="Failed to list directory: "))
 
 
-#TODO: MAYBE ADD A TEST FOR PERMISION ERRORS??????
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                  Chane Permissions (Nolan)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+def test_change_permissions_success(client):
+
+    remote_path = "incoming/file1.txt"
+    new_mode = 0o644  # Desired permissions
+    success = client.change_permissions(remote_path, new_mode)
+    assert success==True
+
+
+def test_change_permissions_failure_not_connected_to_SFTP_server():
+    disconnected_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
+    remote_path = "incoming/file1.txt"
+    new_mode = 0o644  # Desired permissions
+    captured = disconnected_client.change_permissions(remote_path, new_mode)
+    assert ((captured[0]== False) and (captured[1]=="Not connected to an SFTP server"))
+
+def test_change_permissions_failure(client):
+    remote_path = "non_existent_file.txt"
+    new_mode = 0o644  # Desired permissions
+    captured = client.change_permissions(remote_path, new_mode)
+    assert ((captured[0]== False) and (captured[1]=="Failed to change permissions for non_existent_file.txt: [Errno 2] No such file"))
