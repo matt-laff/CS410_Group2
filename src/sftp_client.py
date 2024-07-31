@@ -224,9 +224,9 @@ class SFTP:
     def put(self, local_path, remote_path):
         try:
             self._SFTP.put(local_path, remote_path)
-            self.print_debug(f"Successfully copied {local_path} to {remote_path}")
+            self.print_debug(f"Successfully copied {local_path} to {remote_path}", None, False)
         except Exception as e:
-            self.print_error(f"Failed to copy {local_path} to {remote_path}")
+            self.print_error(f"Failed to copy {local_path} to {remote_path}", e, False)
 
     def set_download_location(self, download_path):
         try:

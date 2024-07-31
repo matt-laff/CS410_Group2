@@ -9,6 +9,10 @@ def main():
     test_menu = Menu()
     test_menu.add_option("login", login, sftp_client)
     test_menu.add_option("list", list_dir, sftp_client)
+    test_menu.add_option("download file", download, sftp_client)
+    test_menu.add_option("download multiple files", download_all, sftp_client)
+    test_menu.add_option("upload file", upload, sftp_client)
+    test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
     test_menu.add_option("Exit", None)
 
     option_selection = None
@@ -44,9 +48,14 @@ def list_dir(sftp_client):
     sftp_client.list_directory()
 
 
-def use_example():
+def download(sftp_client):
+    sftp_client.list_directory()
+    remote_path = input("Enter the file to download: ")
+    local_path = input("Enter the local path: ")
+    sftp_client.download(remote_path, local_path)
 
 
+def download_all(sftp_client):
     remote_file_str= input("Enter the files you want to download, separated by a space:\n")
     remote_file_list = remote_file_str.split(' ')
 
@@ -56,10 +65,26 @@ def use_example():
         local_file_list = local_file_str.split(' ')
     else:
         local_file_list = list()
+    
+    sftp_client.download_all(remote_file_list, local_file_list)
+
+
+def upload(sftp_client):
+    sftp_client.list_directory()
+    local_path = input("Enter the file to upload: ")
+    remote_path = input("Enter the remote path: ")
+    sftp_client.put(local_path, remote_path)
+
+def remove_remote_dir(sftp_client):
+    sftp_client.list_directory()
+    remote_dir_path = input("Enter the directory to delete: ")
+    sftp_client.rmdir(remote_dir_path)
+
+def use_example():
+
 
     sftp_client.set_download_location("C:\\Users\\mattt\\Downloads")
 
-    sftp_client.download_all(remote_file_list, local_file_list)
 
     return 
 

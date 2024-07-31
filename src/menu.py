@@ -16,7 +16,6 @@ class Menu:
         option_num = 1
         for option in self._options:
             add_width = (self._width) - len(option) + 5
-            print(add_width)
             menu_str += str((self._border_char) + " [" + str(option_num) + "] " + str(option) + str((" " * add_width)) + "*\n")
             option_num += 1
         menu_str += str(f"{self._border_char * (self._width + self._width_mod)}\n")
@@ -54,6 +53,7 @@ class Menu:
             print("Option does not exist")
             return None
         return (self._option_map[selection])
+
 
     def execute_option(self, option_str):
         if not option_str in self._func_map:
