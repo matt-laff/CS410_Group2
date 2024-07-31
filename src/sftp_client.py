@@ -162,7 +162,7 @@ class SFTP:
     def list_directory(self):
         if self._SFTP is None:
             print("Not connected to an SFTP server.")
-            return
+            return False
         
         try:
             # Assuming self._SFTP is an instance of paramiko.SFTPClient
@@ -171,6 +171,9 @@ class SFTP:
                 print(item)
         except IOError as e:
             print(f"Failed to list directory: {e}")
+            return False
+        
+        return True
 
     def list_full(self):
         if self._SFTP is None:
