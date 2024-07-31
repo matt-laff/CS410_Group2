@@ -252,9 +252,11 @@ class SFTP:
             source_tok = remote_path.split('/') # Tokenize the source_path string to get the filename
 
             if (self._download_location != None): 
-                local_path = self._download_location + delim + source_tok[-1] 
+                #local_path = self._download_location + delim + source_tok[-1] 
+                local_path = os.path.join(self._download_location, source_tok[-1])
             else:
-                local_path = os.getcwd() + delim + source_tok[-1] 
+                #local_path = os.getcwd() + delim + source_tok[-1] 
+                local_path = os.path.join(os.getcwd(), source_tok[-1])
             
             self._debug_logger.debug(f"Remote path from remote_to_local(): {remote_path}")
             self._debug_logger.debug(f"Local path from remote_to_local(): {local_path}")

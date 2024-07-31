@@ -99,16 +99,20 @@ def test_download_all_success_with_download_location(client):
     remote_file_list.append("incoming/file2.txt")
     remote_file_list.append("incoming/subdirectory/file3.txt")
 
-    client.set_download_location("tmp\\")
+    client.set_download_location(TMP)
     success = client.download_all(remote_file_list, local_file_list)
 
-    file1_exists = os.path.isfile("tmp\\file1.txt")
-    file2_exists = os.path.isfile("tmp\\file2.txt")
-    file3_exists = os.path.isfile("tmp\\file3.txt")
+    file1_path = os.path.join(TMP, "file1.txt")
+    file2_path = os.path.join(TMP, "file2.txt")
+    file3_path = os.path.join(TMP, "file3.txt")
+    
+    file1_exists = os.path.isfile(file1_path)
+    file2_exists = os.path.isfile(file2_path)
+    file3_exists = os.path.isfile(file3_path)
 
-    local_file_list.append("tmp\\file1.txt")
-    local_file_list.append("tmp\\file2.txt")
-    local_file_list.append("tmp\\file3.txt")
+    local_file_list.append(file1_path)
+    local_file_list.append(file2_path)
+    local_file_list.append(file3_path)
 
     for i in range(3):
        with open(local_file_list[i], 'r') as file:
