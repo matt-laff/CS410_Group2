@@ -2,10 +2,14 @@ import pytest
 import os
 import shutil
 from unittest.mock import MagicMock, patch
-from .conftest import get_local_file_path, TMP
+from .conftest import get_local_file_path, TMP, CONTENT_OBJ
 from .context import src
 from src import sftp_client 
 
+from paramiko import Transport
+from paramiko.channel import Channel
+from paramiko.sftp_client import SFTPClient
+from pytest_sftpserver.sftp.server import SFTPServer
 
 @pytest.fixture(scope="session", autouse=True)
 def setup():
@@ -178,3 +182,156 @@ def test_put(mock_client):
     mock_client.put.assert_called_once_with("/tmp/local.txt", "/tmp/remote.txt")
 
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                             Connect (Nolan)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+#                     Configuration
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+
+@pytest.fixture(scope="function")
+def client_connect_tests(sftpserver, content):
+    sftpclient = sftp_client.SFTP(sftpserver.port, sftpserver.host, "stubUser", "stubPassword")
+    return sftpclient
+
+
+Authentication_Failed = ("Authentication failed: Bad authentication type; allowed types: ['publickey',"
+                          "'gssapi-keyex', 'gssapi-with-mic', 'keyboard-interactive', 'hostbased']")
+
+Port_Failed = "Unexpected error during SFTP connection: connect(): port must be 0-65535."
+
+bad_host= bad_port = bad_username= bad_password = "dad"
+
+
+
+#==============================================================#
+#TEST: Initialize SSH transport layer for the connection.
+#==============================================================#
+def test_transport_connection_established_successfully(client_connect_tests):
+    client_connect_tests.connect()
+    transport_success = client_connect_tests._transport
+    assert transport_success is not None
+
+def test_host_failure(client_connect_tests):
+    client_connect_tests._port = bad_port
+    transport_failure = client_connect_tests.connect() 
+    assert((transport_failure[0]== False))
+
+def test_port_failure(client_connect_tests):
+    client_connect_tests._port = bad_port
+    transport_failure = client_connect_tests.connect() 
+    assert((transport_failure[0]== False))
+
+#==============================================================#
+# TEST: the SSH connection using the transport layer.
+#==============================================================#
+def test_ssh_connection_established_successfully(client_connect_tests):
+    client_connect_tests.connect()
+    ssh_success = client_connect_tests._transport
+    assert(ssh_success != None)
+
+def test_ssh_authentication_failure_username(client_connect_tests):
+    client_connect_tests._username =  None
+    auth_failure = client_connect_tests.connect() 
+    assert((auth_failure[0]== False))
+
+"""
+!This test wont work because password is not checked for being valid in mock sftp
+def test_ssh_authentication_failure_password(client_connect_tests):
+    client_connect_tests._password = None
+    auth_failure = client_connect_tests.connect()
+    assert((auth_failure[0]== False))
+"""
+#==============================================================#
+#TEST: Create an SFTP client instance for file operations.
+#==============================================================#
+def test_sftp_client_connection_established_successfully(client_connect_tests):
+    sftp_client_connection_success = client_connect_tests.connect() 
+    assert(sftp_client_connection_success == (True, "Connection Successful"))
+
+def test_sftp_client_value_correct(client_connect_tests):
+    client_connect_tests.connect()
+    sftp_value = client_connect_tests._SFTP
+    assert(sftp_value != None)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                  List Directory remote Contents(Nolan)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+def test_list_directory_current(client, content, capsys):
+    success = client.list_directory()
+    captured = capsys.readouterr()
+    for root_dir in CONTENT_OBJ.keys():
+        assert root_dir in captured.out
+    assert success == True
+
+
+def test_list_directory_failure_not_connected_to_SFTP_server():
+    disconnected_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
+    captured = disconnected_client.list_directory()
+    assert ((captured[0]== False) and (captured[1]=="Not connected to an SFTP server"))
+
+    #Todo:test here general failure
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                  List Directory Local Contents(Nolan)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+def test_list_directory_local_current(content, capsys):
+
+    sample_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
+    success = sample_client.list_directory_local()
+    captured = capsys.readouterr()
+    contents=  os.listdir(os.getcwd())
+    for dir in contents:
+        assert dir in captured.out
+    assert success == True 
+
+    #Todo:test here general failure
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                  Change Permissions (Nolan)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+def test_change_permissions_success(client):
+
+    remote_path = "incoming/file1.txt"
+    new_mode = 0o644  # Desired permissions
+    success = client.change_permissions(remote_path, new_mode)
+    assert success==True
+
+
+def test_change_permissions_failure_not_connected_to_SFTP_server():
+    disconnected_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
+    remote_path = "incoming/file1.txt"
+    new_mode = 0o644  # Desired permissions
+    captured = disconnected_client.change_permissions(remote_path, new_mode)
+    assert ((captured[0]== False) and (captured[1]=="Not connected to an SFTP server"))
+
+def test_change_permissions_failure(client):
+    remote_path = "non_existent_file.txt"
+    new_mode = 0o644  # Desired permissions
+    captured = client.change_permissions(remote_path, new_mode)
+    assert ((captured[0]== False) and (captured[1]=="Failed to change permissions for non_existent_file.txt: [Errno 2] No such file"))
