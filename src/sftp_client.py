@@ -173,6 +173,25 @@ class SFTP:
         
         return True
 
+    #Lists the contents of the current directory on the remote server.
+    def list_directory_local(self):
+        try:
+            # Get the current working directory
+            cwd = os.getcwd()
+
+            # List all entries in the current working directory
+            entries = os.listdir(cwd)
+
+            # Iterate over each entry and print its name
+            for entry in entries:
+                print(entry)
+
+        except Exception as e:
+            return (False, (f"Failed to list local directory: {e}"))
+
+        return True
+
+        
     # Changes the permissions of a file or directory on the remote server
     def change_permissions(self, remote_path, mode):
         try:
