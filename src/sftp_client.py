@@ -285,7 +285,7 @@ class SFTP:
         try:
             self._download_location = download_path
             assert(os.path.isdir(download_path))
-            self._debug_logger.debug(f"Successfully set download location: {e}")
+            self._debug_logger.debug(f"Successfully set download location: {download_path}")
         except Exception as e:
             self._debug_logger.debug(f"Failed to set download location: {e}")
 
