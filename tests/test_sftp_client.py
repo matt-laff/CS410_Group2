@@ -298,10 +298,10 @@ def test_list_directory_local_current(content, capsys):
     sample_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
     success = sample_client.list_directory_local()
     captured = capsys.readouterr()
-
-    for dir in os.listdir(os.getcwd()):
+    contents=  os.listdir(os.getcwd())
+    for dir in contents:
         assert dir in captured.out
-    assert success == True
+    assert success == True 
 
     #Todo:test here general failure
 

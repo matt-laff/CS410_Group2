@@ -161,17 +161,28 @@ class SFTP:
     #Lists the contents of the current directory on the remote server.
     def list_directory(self):
         if self._SFTP is None:
+            self._debug_logger.error("Not connected to a server, list_directory() Failed") 
             return (False, ("Not connected to an SFTP server"))
         
         try:
+             # Get the current working directory on the remote server
+            #? Why dose this fail
+            #!cwd = self._SFTP.getcwd() 
+
+
             # Assuming self._SFTP is an instance of paramiko.SFTPClient
+            #!directory_contents = self._SFTP.listdir(cwd)
             directory_contents = self._SFTP.listdir()
             for item in directory_contents:
                 print(item)
-        except IOError as e:
-            return (False , (f"Failed to list directory: {e}"))
+
+        except Exception as e:
+            self._debug_logger.error(f"Failed to list remote directory: {e}")
+            return (False , (f"Failed to list remote directory: {e}"))
         
+        #!self._debug_logger.debug(f"Successfully listed items in remote directory: {cwd}  ")
         return True
+
 
     #Lists the contents of the current directory on the remote server.
     def list_directory_local(self):
@@ -187,8 +198,10 @@ class SFTP:
                 print(entry)
 
         except Exception as e:
+            self._debug_logger.error(f"Failed to list local directory: {e}")
             return (False, (f"Failed to list local directory: {e}"))
 
+        self._debug_logger.debug(f"Successfully listed items in local directory: {cwd} ")
         return True
 
         
@@ -197,18 +210,19 @@ class SFTP:
         try:
             # Ensure self._SFTP is initialized and connected
             if self._SFTP is None:
+                self._debug_logger.error("Not connected to a server, change_permissions() Failed") 
                 return (False, ("Not connected to an SFTP server"))
 
             # Change the permissions
             # Use chmod method of SFTPClient instance to change the permissions of a file/directory on the remote server
             self._SFTP.chmod(remote_path, mode)
 
-            print(f"Permissions changed for {remote_path}")
-            return True
-
-        except IOError as e:
+        except Exception as e:
+            self._debug_logger.error(f"Failed to change permissions for {remote_path}: {e}")
             return ( False, (f"Failed to change permissions for {remote_path}: {e}"))
         
+        self._debug_logger.debug(f"Successfully changed permissions to {mode} for {remote_path}")
+        return True
 
 
     def list_full(self):
