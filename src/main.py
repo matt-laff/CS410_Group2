@@ -5,33 +5,47 @@ from src.menu import Menu
 from src import SFTP, setup_logger
 
 def main():
+    sftp_client = SFTP()
     test_menu = Menu()
-    test_menu.add_option("a")
-    test_menu.add_option("loooong looong")
-    print(test_menu)
+    test_menu.add_option("login", login, sftp_client)
+    test_menu.add_option("list", list_dir, sftp_client)
+    test_menu.add_option("Exit", None)
 
-def use_example():
+    option_selection = None
+    while(option_selection != "Exit"):
+        print(test_menu)
+        option_selection = test_menu.get_selection()
+        print(f"You Selected: {option_selection}")
+        test_menu.execute_option(option_selection)
+    
+    
+
+
+def login(sftp_client):
     DEFAULT_HOST = "babbage.cs.pdx.edu"
     DEFAULT_PORT = 22
     DEFAULT_USER = "matt"
+    
+    hostname = DEFAULT_HOST
+    port = DEFAULT_PORT
+    username = DEFAULT_USER
+    password = getpass.getpass("Enter password: ")
 
-    hostname = None
-    port = None
-    username = None
-    password = None 
+    sftp_client._host = hostname
+    sftp_client._port = port
+    sftp_client._username = username 
+    sftp_client._password = password 
 
-    if (len(sys.argv) > 1):
-        hostname = DEFAULT_HOST
-        port = DEFAULT_PORT
-        username = DEFAULT_USER
-        password = getpass.getpass("Enter password: ")
-    else:
-        hostname, port, username, password = get_credentials(hostname, port, username, password)
-
-    sftp_client = SFTP(port, hostname, username, password)
     sftp_client.connect()
 
+
+def list_dir(sftp_client):
+    print(sftp_client)
     sftp_client.list_directory()
+
+
+def use_example():
+
 
     remote_file_str= input("Enter the files you want to download, separated by a space:\n")
     remote_file_list = remote_file_str.split(' ')

@@ -21,11 +21,12 @@ class SFTP:
         #Calculate the number of arguments passed to the initializer. Will use as key for constructor calling.
         arg_len = len(args)
 
-
+        print("ARG LEN: " + str(arg_len))
         # Action_map is a dictionary that maps the number of arguments (arg_len) to specific functions.
         # This allows us to dynamically choose which function to execute based on the number of arguments.
+        self._default_constructor()
         action_map = {
-            0: self._default_constructor(),
+            0: lambda: self._default_constructor(),
             1: lambda: self._sftp_client_DI_constructor(*args),  # Wrap the call in a lambda to pass args
             4: lambda: self._param_constructor(*args)  # Wrap the call in a lambda to pass args
         }
