@@ -36,6 +36,15 @@ def mock_client():
 def test_download_success(client):
     local_file_path = get_local_file_path("test.txt")
 
+    print("\n*****************")
+    data = client._SFTP.stat("incoming/file1.txt")
+    print(data)
+    dir_data = client._SFTP.stat("incoming")
+    client._SFTP.chmod("incoming", 0)
+    print(dir_data)
+    dir_data = client._SFTP.stat("incoming")
+    print(dir_data)
+    print("*****************")
     success = client.download("incoming/file1.txt", local_file_path)
     file_exists = os.path.isfile(local_file_path)
     with open(local_file_path, 'r') as file:

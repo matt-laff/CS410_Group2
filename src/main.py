@@ -1,15 +1,20 @@
 import sys
 import getpass
 import os
-
+from src.menu import Menu
 from src import SFTP, setup_logger
 
-DEFAULT_HOST = "babbage.cs.pdx.edu"
-DEFAULT_PORT = 22
-DEFAULT_USER = "matt"
-
 def main():
-    
+    test_menu = Menu()
+    test_menu.add_option("a")
+    test_menu.add_option("loooong looong")
+    print(test_menu)
+
+def use_example():
+    DEFAULT_HOST = "babbage.cs.pdx.edu"
+    DEFAULT_PORT = 22
+    DEFAULT_USER = "matt"
+
     hostname = None
     port = None
     username = None
