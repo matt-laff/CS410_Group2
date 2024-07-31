@@ -284,6 +284,7 @@ def test_list_directory_failure_not_connected_to_SFTP_server():
     captured = disconnected_client.list_directory()
     assert ((captured[0]== False) and (captured[1]=="Not connected to an SFTP server"))
 
+    #Todo:test here general failure
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -301,6 +302,8 @@ def test_list_directory_local_current(content, capsys):
     for dir in os.listdir(os.getcwd()):
         assert dir in captured.out
     assert success == True
+
+    #Todo:test here general failure
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
