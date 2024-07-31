@@ -161,7 +161,7 @@ class SFTP:
     #Lists the contents of the current directory on the remote server.
     def list_directory(self):
         if self._SFTP is None:
-            return False, ("Not connected to an SFTP server")
+            return (False, ("Not connected to an SFTP server"))
         
         try:
             # Assuming self._SFTP is an instance of paramiko.SFTPClient
