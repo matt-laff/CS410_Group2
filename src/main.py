@@ -7,6 +7,7 @@ from src import SFTP, setup_logger
 def main():
     sftp_client = SFTP()
     test_menu = Menu()
+    test_menu.set_title(" CS 410 Group 2 - SFTP ") 
     test_menu.add_option("login", login, sftp_client)
     test_menu.add_option("list", list_dir, sftp_client)
     test_menu.add_option("set default download location", set_download, sftp_client)
@@ -14,6 +15,7 @@ def main():
     test_menu.add_option("download multiple files", download_all, sftp_client)
     test_menu.add_option("upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
+    test_menu.add_option("Quick login", quick_login, sftp_client)
     test_menu.add_option("Exit", None)
 
     option_selection = None
@@ -23,10 +25,10 @@ def main():
         print(f"You Selected: {option_selection}")
         test_menu.execute_option(option_selection)
     
+
+
+def quick_login(sftp_client):
     
-
-
-def login(sftp_client):
     DEFAULT_HOST = "babbage.cs.pdx.edu"
     DEFAULT_PORT = 22
     DEFAULT_USER = "matt"
@@ -35,7 +37,7 @@ def login(sftp_client):
     port = DEFAULT_PORT
     username = DEFAULT_USER
     password = getpass.getpass("Enter password: ")
-
+    
     sftp_client._host = hostname
     sftp_client._port = port
     sftp_client._username = username 
@@ -43,6 +45,39 @@ def login(sftp_client):
 
     sftp_client.connect()
 
+
+# Input/Validation function - should we leave these in main to keep it simple or add a input/validation layer?
+def login(sftp_client):
+
+    DEFAULT_HOST = "babbage.cs.pdx.edu"
+    DEFAULT_PORT = 22
+    DEFAULT_USER = "matt"
+    
+    hostname = None
+    port = None
+    username = None
+    password = None
+
+    hostname = input("Enter hostname: ") 
+    if (hostname == ''):
+        hostname = DEFAULT_HOST
+    port = input("enter port: ")
+    if (port == ''):
+        port = DEFAULT_PORT
+    username = input("enter username: ")
+    if (username == ''):
+        username = DEFAULT_USER
+    password = getpass.getpass("Enter password: ")
+    
+    sftp_client._host = hostname
+    sftp_client._port = int(port)
+    sftp_client._username = username 
+    sftp_client._password = password 
+
+    sftp_client.connect()
+    
+
+# I/V function 
 def set_download(sftp_client):
     download_path = input("Enter download path")
     sftp_client.set_download_location(download_path)
@@ -88,25 +123,8 @@ def remove_remote_dir(sftp_client):
 
 
 
-def use_example():
-
-
-
-
-    return 
-
 
 def get_credentials(hostname, port, username, password):
-    hostname = input("enter hostname: ")
-    if (hostname == ''):
-        hostname = DEFAULT_HOST
-    port = input("enter port: ")
-    if (port == ''):
-        port = DEFAULT_PORT
-    username = input("enter username: ")
-    if (username == ''):
-        username = DEFAULT_USER
-    password = getpass.getpass("Enter password: ")
     return hostname, port, username, password
 
 

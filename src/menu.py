@@ -13,6 +13,11 @@ class Menu:
     
     def __str__(self) -> str:
         menu_str = str(f"{self._border_char * (self._width + self._width_mod)}\n")
+        add_width = (self._width + self._width_mod) - len(self._title) - 2
+        print(self._width)
+        print(add_width)
+        menu_str += str((self._border_char) + str((" " * (int(add_width/2))) + str(self._title) + str((" " * ((int(add_width/2))))) + "*\n"))
+        menu_str += str(f"{self._border_char * (self._width + self._width_mod)}\n")
         option_num = 1
         for option in self._options:
             add_width = (self._width) - len(option) + 5
@@ -48,7 +53,10 @@ class Menu:
 
 
     def get_selection(self):
-        selection = int(input("Please make a selection "))
+        try:
+            selection = int(input("Please make a selection "))
+        except Exception as e:
+            return None 
         if selection > self._num_options or selection <= 0:
             print("Option does not exist")
             return None
