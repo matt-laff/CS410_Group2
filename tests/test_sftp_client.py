@@ -40,12 +40,21 @@ def mock_client():
 def test_download_success(client):
     local_file_path = get_local_file_path("test.txt")
 
+    print("\n*****************")
+    data = client._SFTP.stat("incoming/file1.txt")
+    print(data)
+    dir_data = client._SFTP.stat("incoming")
+    client._SFTP.chmod("incoming", 0)
+    print(dir_data)
+    dir_data = client._SFTP.stat("incoming")
+    print(dir_data)
+    print("*****************")
     success = client.download("incoming/file1.txt", local_file_path)
     file_exists = os.path.isfile(local_file_path)
     with open(local_file_path, 'r') as file:
             assert(file.read() == "file1")
     assert(file_exists == True)
-    assert(success == True)
+    assert(success[0] == True)
 
 
 def test_download_failure(client):
@@ -54,7 +63,7 @@ def test_download_failure(client):
     success = client.download("nonexistent.txt", local_file_path)
     file_exists = os.path.isfile(local_file_path)
     assert(file_exists == False)
-    assert(success == False)
+    assert(success[0] == False)
 
 ############ Download Multiple Tests ############
 
@@ -90,7 +99,7 @@ def test_download_all_success_no_download_location(client):
     assert(file1_exists == True)
     assert(file2_exists == True)
     assert(file3_exists == True)
-    assert(success == True)
+    assert(success[0] == True)
 
 
 # Test successful download of multiple files with no local path provided
@@ -103,16 +112,20 @@ def test_download_all_success_with_download_location(client):
     remote_file_list.append("incoming/file2.txt")
     remote_file_list.append("incoming/subdirectory/file3.txt")
 
-    client.set_download_location("tmp\\")
+    client.set_download_location(TMP)
     success = client.download_all(remote_file_list, local_file_list)
 
-    file1_exists = os.path.isfile("tmp\\file1.txt")
-    file2_exists = os.path.isfile("tmp\\file2.txt")
-    file3_exists = os.path.isfile("tmp\\file3.txt")
+    file1_path = os.path.join(TMP, "file1.txt")
+    file2_path = os.path.join(TMP, "file2.txt")
+    file3_path = os.path.join(TMP, "file3.txt")
+    
+    file1_exists = os.path.isfile(file1_path)
+    file2_exists = os.path.isfile(file2_path)
+    file3_exists = os.path.isfile(file3_path)
 
-    local_file_list.append("tmp\\file1.txt")
-    local_file_list.append("tmp\\file2.txt")
-    local_file_list.append("tmp\\file3.txt")
+    local_file_list.append(file1_path)
+    local_file_list.append(file2_path)
+    local_file_list.append(file3_path)
 
     for i in range(3):
        with open(local_file_list[i], 'r') as file:
@@ -121,7 +134,8 @@ def test_download_all_success_with_download_location(client):
     assert(file1_exists == True)
     assert(file2_exists == True)
     assert(file3_exists == True)
-    assert(success == True)
+    assert(success[0] == True)
+
 
 
 
@@ -148,7 +162,7 @@ def test_download_all_failure_nonexistant(client):
     assert(file1_exists == False)
     assert(file2_exists == False)
     assert(file3_exists == False)
-    assert(success == False)
+    assert(success[0] == False)
 
 
 # Test to make sure download_all fails on mismatched list lengths
@@ -168,7 +182,7 @@ def test_download_all_failure_bad_length(client):
     
     assert(file1_exists == False)
     assert(file2_exists == False)
-    assert(success == False)
+    assert(success[0] == False)
 
 
 def test_rmdir(mock_client):
@@ -276,7 +290,7 @@ def test_list_directory_current(client, content, capsys):
     captured = capsys.readouterr()
     for root_dir in CONTENT_OBJ.keys():
         assert root_dir in captured.out
-    assert success == True
+    assert success[0] == True
 
 
 def test_list_directory_failure_not_connected_to_SFTP_server():
@@ -301,7 +315,7 @@ def test_list_directory_local_current(content, capsys):
     contents=  os.listdir(os.getcwd())
     for dir in contents:
         assert dir in captured.out
-    assert success == True 
+    assert success[0] == True 
 
     #Todo:test here general failure
 
@@ -320,7 +334,7 @@ def test_change_permissions_success(client):
     remote_path = "incoming/file1.txt"
     new_mode = 0o644  # Desired permissions
     success = client.change_permissions(remote_path, new_mode)
-    assert success==True
+    assert success[0]==True
 
 
 def test_change_permissions_failure_not_connected_to_SFTP_server():

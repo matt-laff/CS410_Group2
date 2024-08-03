@@ -21,11 +21,11 @@ class SFTP:
         #Calculate the number of arguments passed to the initializer. Will use as key for constructor calling.
         arg_len = len(args)
 
-
         # Action_map is a dictionary that maps the number of arguments (arg_len) to specific functions.
         # This allows us to dynamically choose which function to execute based on the number of arguments.
+        self._default_constructor()
         action_map = {
-            0: self._default_constructor(),
+            0: lambda: self._default_constructor(),
             1: lambda: self._sftp_client_DI_constructor(*args),  # Wrap the call in a lambda to pass args
             4: lambda: self._param_constructor(*args)  # Wrap the call in a lambda to pass args
         }
@@ -82,7 +82,6 @@ class SFTP:
         self._SFTP = None
 
 
-
     #destructor
     def __del__(self):
 
@@ -107,6 +106,7 @@ class SFTP:
         # Download path
         self._download_location = None
 
+
     def connect(self):
 
         try:
@@ -123,16 +123,7 @@ class SFTP:
              # Create an SFTP client instance for file operations.
             self._debug_logger.debug("Creating SFTP client")
             self._SFTP = paramiko.SFTPClient.from_transport(self._transport)
-            
-
-
             self._debug_logger.debug("SFTP connection established successfully")
-
-
-        #TODO: BadAuthenticationType???? 
-        #TODO: GENERIC EXCPEITON HANDLING
-        #! HOW ARE WE NOT CATCHING AN ERROR WITH THE CATCH ALL ----- UNDERSTADN---- "EXEPTION CHAINING"
-
 
         except AuthenticationException as e:
             self._debug_logger.error(f"Authentication failed: {str(e)}")
@@ -154,7 +145,7 @@ class SFTP:
 
             return False,(f"Unexpected error during SFTP connection: {str(e)}")
 
-        return True,"Connection Successful"
+        return (True,"Connection Successful")
 
 
 
@@ -169,7 +160,6 @@ class SFTP:
             #? Why dose this fail
             #!cwd = self._SFTP.getcwd() 
 
-
             # Assuming self._SFTP is an instance of paramiko.SFTPClient
             #!directory_contents = self._SFTP.listdir(cwd)
             directory_contents = self._SFTP.listdir()
@@ -181,7 +171,7 @@ class SFTP:
             return (False , (f"Failed to list remote directory: {e}"))
         
         #!self._debug_logger.debug(f"Successfully listed items in remote directory: {cwd}  ")
-        return True
+        return (True, "") # Need empty string to fit convention
 
 
     #Lists the contents of the current directory on the remote server.
@@ -202,7 +192,7 @@ class SFTP:
             return (False, (f"Failed to list local directory: {e}"))
 
         self._debug_logger.debug(f"Successfully listed items in local directory: {cwd} ")
-        return True
+        return (True, "")
 
         
     # Changes the permissions of a file or directory on the remote server
@@ -222,92 +212,99 @@ class SFTP:
             return ( False, (f"Failed to change permissions for {remote_path}: {e}"))
         
         self._debug_logger.debug(f"Successfully changed permissions to {mode} for {remote_path}")
-        return True
+        return (True, f"Successfully changed permissions to {mode} for {remote_path}")
 
 
     def list_full(self):
         if self._SFTP is None:
-            self.print_debug("Not connected to a server, list_full() failed", None, False) 
-            return
+            return (False, "Not connected to a server, list with attributes failed." )
         
         try:
             directory_contents = self._SFTP.listdir_attr()
             for item in directory_contents:
                 print(item)
-        except IOError as e:
-            print(f"Failed to list directory: {e}")
+            return (True, "")
+        except Exception as e:
+            self._debug_logger.error(f"Failed to list contents of directory: {e}")
 
 
     def download_all(self, remote_path_list, local_path_list):
-        success = False
+        success = (False, "")
         if (len(local_path_list) == 0): # Empty local path, default to current directory
-            self.print_debug("Empty local_path_list, building local_path", None, False)
+            self._debug_logger.debug("Empty local path list, building local path")
             for path in remote_path_list:
                 local_path = self.remote_to_local(path)
-                self.print_debug(f"Local path: {local_path}", None, False)
+                self._debug_logger.debug(f"Local path: {local_path}") 
                 success = self.download(path, local_path)
         elif (len(local_path_list) == len(remote_path_list)):
             for remote_path, local_path in zip(remote_path_list, local_path_list):
                 success = self.download(remote_path, local_path)
-        return success
+        if (success[0]):
+            return (True, "Successfully downloaded all files")
+        else:
+            return (False, "Failed to download all files")
 
 
     # Download from source_path on the remote server to destination_path on the local machine
     def download(self, source_path, destination_path):
+        if ((self._download_location != None) and (destination_path == "" or destination_path == None)):
+            filename = (source_path.split('/'))[-1]
+            destination_path = os.path.join(self._download_location, filename)
+            self._debug_logger.debug(f"Attempting to download {filename} to {destination_path}")
         try:
             self._SFTP.get(source_path, destination_path)
-            self.print_debug(f"Successfully downloaded {source_path} to {destination_path}", None, True) 
-            return True
+            result_msg = f"Sucessfully downloaded {source_path} to {destination_path}"
+            self._debug_logger.debug(result_msg)
+            return (True, result_msg)
         except Exception as e:
             if (os.path.isfile(destination_path)):
                 os.remove(destination_path)
-            self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
-            return False
+            result_msg = f"Failed to download file {source_path} to {destination_path}"
+            self._debug_logger.error(result_msg) 
+            return (False, result_msg)
 
     # Remove the directory at the remote path
     def rmdir(self, remote_path):
         try:
             self._SFTP.rmdir(remote_path)
-            self.print_debug(f"Successsfully removed directory at {remote_path}")
+            self._debug_logger.debug(f"Successfully removed directory at {remote_path}")
+            return (True, f"Successfuly removed directory at {remote_path}")
         except Exception as e:
-            self.print_error(f"Failed to remove directory at {remote_path}", e)
+            self._debug_logger.error(f"Failed to remove directory at {remote_path}")
+            return (False, f"Failed to remove directory at {remote_path}")
     
     # Copy a local file (local_path) to the SFTP server as remote_path
     def put(self, local_path, remote_path):
         try:
             self._SFTP.put(local_path, remote_path)
-            self.print_debug(f"Successfully copied {local_path} to {remote_path}")
+            self.print_debug(f"Successfully copied {local_path} to {remote_path}", None, False)
+            return (True, f"Successfully copied {local_path} to {remote_path}")
         except Exception as e:
-            self.print_error(f"Failed to copy {local_path} to {remote_path}")
+            self.print_error(f"Failed to copy {local_path} to {remote_path}", e, False)
+            return (False, f"Failed to copy {local_path} to {remote_path}")
 
     def set_download_location(self, download_path):
         try:
             self._download_location = download_path
             assert(os.path.isdir(download_path))
-            self._debug_logger.debug(f"Successfully set download location: {e}")
+            result_msg = f"Successfully set download location: {download_path}"
+            self._debug_logger.debug(result_msg)
+            return (True, result_msg)
         except Exception as e:
-            self._debug_logger.debug(f"Failed to set download location: {e}")
+            result_msg = f"Failed to set download location"
+            self._debug_logger.debug(f"{result_msg} : {e}")
+            return (False, result_msg)
 
 
     # Helper function to convert remote formatting to local system formatting
     def remote_to_local(self, remote_path):
-        self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
-        
-        # Maps the result of sys.platform to different delimiters for the path - necessary since windows uses \\ and linux/mac use / 
-        platform_map = {
-            "win32": "\\",
-            ("linux") or ("linux2"): "/",
-            "darwin": "/"
-        }
-        delim = platform_map[sys.platform]
-
         try:
             source_tok = remote_path.split('/') # Tokenize the source_path string to get the filename
 
             if (self._download_location != None): 
-                local_path = self._download_location + delim + source_tok[-1] 
+                local_path = os.path.join(self._download_location, source_tok[-1])
             else:
-                local_path = os.getcwd() + delim + source_tok[-1] 
+                local_path = os.path.join(os.getcwd(), source_tok[-1])
             
             self._debug_logger.debug(f"Remote path from remote_to_local(): {remote_path}")
             self._debug_logger.debug(f"Local path from remote_to_local(): {local_path}")
