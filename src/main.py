@@ -15,38 +15,21 @@ def main():
     test_menu.add_option("download multiple files", download_all, sftp_client)
     test_menu.add_option("upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
-    test_menu.add_option("Quick login", quick_login, sftp_client)
     test_menu.add_option("Exit", None)
 
     option_selection = None
     while(option_selection != "Exit"):
         print(test_menu)
-        option_selection = test_menu.get_selection()
-        print(f"You Selected: {option_selection}")
-        test_menu.execute_option(option_selection)
-    
+        try:
+            option_selection = test_menu.get_selection()
+            result = test_menu.execute_option(option_selection)
+            print(result[1])
+        except Exception as e:
+            print(f"There was an error with your selection: {e}")
+        
 
 
-def quick_login(sftp_client):
-    
-    DEFAULT_HOST = "babbage.cs.pdx.edu"
-    DEFAULT_PORT = 22
-    DEFAULT_USER = "matt"
-    
-    hostname = DEFAULT_HOST
-    port = DEFAULT_PORT
-    username = DEFAULT_USER
-    password = getpass.getpass("Enter password: ")
-    
-    sftp_client._host = hostname
-    sftp_client._port = port
-    sftp_client._username = username 
-    sftp_client._password = password 
-
-    sftp_client.connect()
-
-
-# Input/Validation function - should we leave these in main to keep it simple or add a input/validation layer?
+# Input/Validation function requirements: return result of sftp_client function call
 def login(sftp_client):
 
     DEFAULT_HOST = "babbage.cs.pdx.edu"
@@ -74,25 +57,24 @@ def login(sftp_client):
     sftp_client._username = username 
     sftp_client._password = password 
 
-    sftp_client.connect()
+    return sftp_client.connect()
     
 
-# I/V function 
 def set_download(sftp_client):
     download_path = input("Enter download path")
-    sftp_client.set_download_location(download_path)
+    return sftp_client.set_download_location(download_path)
 
 
 def list_dir(sftp_client):
     print(sftp_client)
-    sftp_client.list_directory()
+    return sftp_client.list_directory()
 
 
 def download(sftp_client):
     if (sftp_client.list_directory()):
         remote_path = input("Enter the file to download: ")
         local_path = input("Enter the local path: ")
-        sftp_client.download(remote_path, local_path)
+        return sftp_client.download(remote_path, local_path)
 
 
 def download_all(sftp_client):
@@ -107,26 +89,19 @@ def download_all(sftp_client):
         else:
             local_file_list = list()
         
-        sftp_client.download_all(remote_file_list, local_file_list)
+        return sftp_client.download_all(remote_file_list, local_file_list)
 
 
 def upload(sftp_client):
     if (sftp_client.list_directory()):
         local_path = input("Enter the file to upload: ")
         remote_path = input("Enter the remote path: ")
-        sftp_client.put(local_path, remote_path)
+        return sftp_client.put(local_path, remote_path)
 
 def remove_remote_dir(sftp_client):
     if (sftp_client.list_directory()):
         remote_dir_path = input("Enter the directory to delete: ")
-        sftp_client.rmdir(remote_dir_path)
-
-
-
-
-def get_credentials(hostname, port, username, password):
-    return hostname, port, username, password
-
+        return sftp_client.rmdir(remote_dir_path)
 
 
 

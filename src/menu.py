@@ -14,8 +14,6 @@ class Menu:
     def __str__(self) -> str:
         menu_str = str(f"{self._border_char * (self._width + self._width_mod)}\n")
         add_width = (self._width + self._width_mod) - len(self._title) - 2
-        print(self._width)
-        print(add_width)
         menu_str += str((self._border_char) + str((" " * (int(add_width/2))) + str(self._title) + str((" " * ((int(add_width/2))))) + "*\n"))
         menu_str += str(f"{self._border_char * (self._width + self._width_mod)}\n")
         option_num = 1
@@ -58,18 +56,18 @@ class Menu:
         except Exception as e:
             return None 
         if selection > self._num_options or selection <= 0:
-            print("Option does not exist")
             return None
         return (self._option_map[selection])
 
 
     def execute_option(self, option_str):
         if not option_str in self._func_map:
-            raise ValueError("Option not in map")
+            raise ValueError("Selected option doesn't exist in menu")
         else:
            if (self._func_map[option_str] == None):
                return None
            success = self._func_map[option_str]()
+           print(f"Success: {success}")
            return success 
 
 
