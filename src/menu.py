@@ -67,7 +67,6 @@ class Menu:
            if (self._func_map[option_str] == None):
                return None
            success = self._func_map[option_str]()
-           print(f"Success: {success}")
            return success 
 
 

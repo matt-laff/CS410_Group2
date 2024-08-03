@@ -82,7 +82,6 @@ class SFTP:
         self._SFTP = None
 
 
-
     #destructor
     def __del__(self):
 
@@ -106,6 +105,7 @@ class SFTP:
 
         # Download path
         self._download_location = None
+
 
     def connect(self):
 
@@ -229,7 +229,7 @@ class SFTP:
 
 
     def download_all(self, remote_path_list, local_path_list):
-        success = False
+        success = (False, "")
         if (len(local_path_list) == 0): # Empty local path, default to current directory
             self._debug_logger.debug("Empty local path list, building local path")
             for path in remote_path_list:
@@ -239,14 +239,18 @@ class SFTP:
         elif (len(local_path_list) == len(remote_path_list)):
             for remote_path, local_path in zip(remote_path_list, local_path_list):
                 success = self.download(remote_path, local_path)
-        if (success):
-            return (success, "Successfully downloaded all files")
+        if (success[0]):
+            return (True, "Successfully downloaded all files")
         else:
-            return (success, "Failed to download all files")
+            return (False, "Failed to download all files")
 
 
     # Download from source_path on the remote server to destination_path on the local machine
     def download(self, source_path, destination_path):
+        if ((self._download_location != None) and (destination_path == "" or destination_path == None)):
+            filename = (source_path.split('/'))[-1]
+            destination_path = os.path.join(self._download_location, filename)
+            self._debug_logger.debug(f"Attempting to download {filename} to {destination_path}")
         try:
             self._SFTP.get(source_path, destination_path)
             result_msg = f"Sucessfully downloaded {source_path} to {destination_path}"
@@ -288,30 +292,18 @@ class SFTP:
             return (True, result_msg)
         except Exception as e:
             result_msg = f"Failed to set download location"
-            self._debug_logger.debug(result_msg + str(e))
+            self._debug_logger.debug(f"{result_msg} : {e}")
             return (False, result_msg)
 
 
     # Helper function to convert remote formatting to local system formatting
     def remote_to_local(self, remote_path):
-        self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
-        
-        # Maps the result of sys.platform to different delimiters for the path - necessary since windows uses \\ and linux/mac use / 
-        platform_map = {
-            "win32": "\\",
-            ("linux") or ("linux2"): "/",
-            "darwin": "/"
-        }
-        delim = platform_map[sys.platform]
-
         try:
             source_tok = remote_path.split('/') # Tokenize the source_path string to get the filename
 
             if (self._download_location != None): 
-                #local_path = self._download_location + delim + source_tok[-1] 
                 local_path = os.path.join(self._download_location, source_tok[-1])
             else:
-                #local_path = os.getcwd() + delim + source_tok[-1] 
                 local_path = os.path.join(os.getcwd(), source_tok[-1])
             
             self._debug_logger.debug(f"Remote path from remote_to_local(): {remote_path}")

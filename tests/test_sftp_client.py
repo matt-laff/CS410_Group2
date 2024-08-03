@@ -54,7 +54,7 @@ def test_download_success(client):
     with open(local_file_path, 'r') as file:
             assert(file.read() == "file1")
     assert(file_exists == True)
-    assert(success == True)
+    assert(success[0] == True)
 
 
 def test_download_failure(client):
@@ -63,7 +63,7 @@ def test_download_failure(client):
     success = client.download("nonexistent.txt", local_file_path)
     file_exists = os.path.isfile(local_file_path)
     assert(file_exists == False)
-    assert(success == False)
+    assert(success[0] == False)
 
 ############ Download Multiple Tests ############
 
@@ -99,7 +99,7 @@ def test_download_all_success_no_download_location(client):
     assert(file1_exists == True)
     assert(file2_exists == True)
     assert(file3_exists == True)
-    assert(success == True)
+    assert(success[0] == True)
 
 
 # Test successful download of multiple files with no local path provided
@@ -134,7 +134,8 @@ def test_download_all_success_with_download_location(client):
     assert(file1_exists == True)
     assert(file2_exists == True)
     assert(file3_exists == True)
-    assert(success == True)
+    assert(success[0] == True)
+
 
 
 
@@ -161,7 +162,7 @@ def test_download_all_failure_nonexistant(client):
     assert(file1_exists == False)
     assert(file2_exists == False)
     assert(file3_exists == False)
-    assert(success == False)
+    assert(success[0] == False)
 
 
 # Test to make sure download_all fails on mismatched list lengths
@@ -181,7 +182,7 @@ def test_download_all_failure_bad_length(client):
     
     assert(file1_exists == False)
     assert(file2_exists == False)
-    assert(success == False)
+    assert(success[0] == False)
 
 
 def test_rmdir(mock_client):
@@ -289,7 +290,7 @@ def test_list_directory_current(client, content, capsys):
     captured = capsys.readouterr()
     for root_dir in CONTENT_OBJ.keys():
         assert root_dir in captured.out
-    assert success == True
+    assert success[0] == True
 
 
 def test_list_directory_failure_not_connected_to_SFTP_server():
@@ -314,7 +315,7 @@ def test_list_directory_local_current(content, capsys):
     contents=  os.listdir(os.getcwd())
     for dir in contents:
         assert dir in captured.out
-    assert success == True 
+    assert success[0] == True 
 
     #Todo:test here general failure
 
@@ -333,7 +334,7 @@ def test_change_permissions_success(client):
     remote_path = "incoming/file1.txt"
     new_mode = 0o644  # Desired permissions
     success = client.change_permissions(remote_path, new_mode)
-    assert success==True
+    assert success[0]==True
 
 
 def test_change_permissions_failure_not_connected_to_SFTP_server():

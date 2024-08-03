@@ -15,7 +15,7 @@ def main():
     test_menu.add_option("download multiple files", download_all, sftp_client)
     test_menu.add_option("upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
-    test_menu.add_option("Exit", None)
+    test_menu.add_option("Exit", exit)
 
     option_selection = None
     while(option_selection != "Exit"):
@@ -24,6 +24,8 @@ def main():
             option_selection = test_menu.get_selection()
             result = test_menu.execute_option(option_selection)
             print(result[1])
+            if (option_selection != "Exit"): 
+                input("\nPress Enter to continue...")
         except Exception as e:
             print(f"There was an error with your selection: {e}")
         
@@ -32,9 +34,6 @@ def main():
 # Input/Validation function requirements: return result of sftp_client function call
 def login(sftp_client):
 
-    DEFAULT_HOST = "babbage.cs.pdx.edu"
-    DEFAULT_PORT = 22
-    DEFAULT_USER = "matt"
     
     hostname = None
     port = None
@@ -42,26 +41,23 @@ def login(sftp_client):
     password = None
 
     hostname = input("Enter hostname: ") 
-    if (hostname == ''):
-        hostname = DEFAULT_HOST
     port = input("enter port: ")
-    if (port == ''):
-        port = DEFAULT_PORT
     username = input("enter username: ")
-    if (username == ''):
-        username = DEFAULT_USER
     password = getpass.getpass("Enter password: ")
-    
-    sftp_client._host = hostname
-    sftp_client._port = int(port)
-    sftp_client._username = username 
-    sftp_client._password = password 
+
+    try:
+        sftp_client._host = hostname
+        sftp_client._port = int(port)
+        sftp_client._username = username 
+        sftp_client._password = password 
+    except Exception as e:
+        return (False, f"Invalid port number {port}")
 
     return sftp_client.connect()
     
 
 def set_download(sftp_client):
-    download_path = input("Enter download path")
+    download_path = input("Enter download path: ")
     return sftp_client.set_download_location(download_path)
 
 
@@ -93,10 +89,11 @@ def download_all(sftp_client):
 
 
 def upload(sftp_client):
-    if (sftp_client.list_directory()):
+    if (sftp_client.list_directory_local()):
         local_path = input("Enter the file to upload: ")
-        remote_path = input("Enter the remote path: ")
-        return sftp_client.put(local_path, remote_path)
+        if (sftp_client.list_directory()):
+            remote_path = input("Enter the remote path: ")
+            return sftp_client.put(local_path, remote_path)
 
 def remove_remote_dir(sftp_client):
     if (sftp_client.list_directory()):
@@ -104,6 +101,8 @@ def remove_remote_dir(sftp_client):
         return sftp_client.rmdir(remote_dir_path)
 
 
+def exit():
+    return (True, "Exiting...")
 
 if __name__ == "__main__":
     main()
