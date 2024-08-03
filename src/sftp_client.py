@@ -2,6 +2,8 @@ import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
 import sys
 import os
+import threading
+from pynput import keyboard
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
@@ -54,6 +56,10 @@ class SFTP:
         self._transport = None
         self._SFTP = None
 
+        #Timeout Value
+        self._timeout:int = (1*60)
+        self.timer = None
+
 
     # Dependency injection of the SFTPClient for unit testing
     def _sftp_client_DI_constructor(self,sftp_client):
@@ -82,6 +88,10 @@ class SFTP:
         self._SFTP = None
 
 
+        #Timeout Value
+        self._timeout:int = (1*60)
+        self.timer = None
+
 
     #destructor
     def __del__(self):
@@ -106,6 +116,10 @@ class SFTP:
 
         # Download path
         self._download_location = None
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
     def connect(self):
 
@@ -154,9 +168,14 @@ class SFTP:
 
             return False,(f"Unexpected error during SFTP connection: {str(e)}")
 
+        #start the timeout timer
+        self.start_timer()
         return True,"Connection Successful"
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
     #Lists the contents of the current directory on the remote server.
     def list_directory(self):
@@ -184,6 +203,10 @@ class SFTP:
         return True
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
     #Lists the contents of the current directory on the remote server.
     def list_directory_local(self):
         try:
@@ -204,6 +227,9 @@ class SFTP:
         self._debug_logger.debug(f"Successfully listed items in local directory: {cwd} ")
         return True
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         
     # Changes the permissions of a file or directory on the remote server
     def change_permissions(self, remote_path, mode):
@@ -224,8 +250,11 @@ class SFTP:
         self._debug_logger.debug(f"Successfully changed permissions to {mode} for {remote_path}")
         return True
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-    def list_full(self):
+    def list_directory_full(self):
         if self._SFTP is None:
             self.print_debug("Not connected to a server, list_full() failed", None, False) 
             return
@@ -237,6 +266,9 @@ class SFTP:
         except IOError as e:
             print(f"Failed to list directory: {e}")
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
     def download_all(self, remote_path_list, local_path_list):
         success = False
@@ -252,6 +284,10 @@ class SFTP:
         return success
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
     # Download from source_path on the remote server to destination_path on the local machine
     def download(self, source_path, destination_path):
         try:
@@ -263,6 +299,9 @@ class SFTP:
                 os.remove(destination_path)
             self.print_error(f"Failed to download file {source_path} to {destination_path}", e, True)
             return False
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
     # Remove the directory at the remote path
     def rmdir(self, remote_path):
@@ -272,6 +311,9 @@ class SFTP:
         except Exception as e:
             self.print_error(f"Failed to remove directory at {remote_path}", e)
     
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     # Copy a local file (local_path) to the SFTP server as remote_path
     def put(self, local_path, remote_path):
         try:
@@ -280,6 +322,9 @@ class SFTP:
         except Exception as e:
             self.print_error(f"Failed to copy {local_path} to {remote_path}")
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     def set_download_location(self, download_path):
         try:
             self._download_location = download_path
@@ -289,6 +334,52 @@ class SFTP:
             self._debug_logger.debug(f"Failed to set download location: {e}")
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+    #"Handler for keyboard events to reset the timer.
+    def on_key_press(self, key):
+        self.reset_timer()
+
+    #reset tiner
+    def reset_timer(self):
+            self.start_timer()
+
+
+    #cleanup procedure
+    def timer_cleanup(self):
+        self.clear_terminal()
+        print("Due to inactivity, you were logged out for security reasons")
+
+    def start_timer(self):
+
+        self.cleanup = lambda: self.__del__() #cleanup then destruct
+
+        if(self.timer != None):
+            if hasattr(self, 'timer'):
+                self.timer.cancel()  # Stop the existing timer
+
+        self.timer = threading.Timer(self._timeout, self.timer_cleanup)#set timer, and action
+        self.timer.start()#start
+
+        # Set up keyboard listener
+        self._listener = keyboard.Listener(on_press=self.on_key_press)
+        self._listener.start()
+
+
+
+    def configure_timeout(self,timeout_value):
+        if (not isinstance(timeout_value, int) or timeout_value <= 0):
+            return False
+
+        self._timeout:int = (timeout_value * 60)
+
+        return (True, f"Current time in session has been reset back to 0 & timeout value has been set to {self._timeout}")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     # Helper function to convert remote formatting to local system formatting
     def remote_to_local(self, remote_path):
         self.print_debug(f"Operating System: {sys.platform}", None, True) # Debug info for operating system
@@ -317,6 +408,9 @@ class SFTP:
             self.print_error(f"Failed to download file {source_tok[-1]} to {local_path}", e, True)
             return None
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
     def print_debug(self, message, e = None, out = True):
         if (e == None):
@@ -339,3 +433,9 @@ class SFTP:
                 print(message)
             self._debug_logger.error(f"{message} : {e}")
         
+    def clear_terminal(self):
+        # Check the OS and call the appropriate command
+        if os.name == 'nt':  # Windows
+            os.system('cls')
+        else:  # Unix/Linux/MacOS
+            os.system('clear')
