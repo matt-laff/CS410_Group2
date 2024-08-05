@@ -11,8 +11,7 @@ def main():
     sftp_client._host = "ada.cs.pdx.edu"
     sftp_client._port = 22
     sftp_client._username = "matt"
-    sftp_client._password = "7357ingS1!"
-
+    sftp_client._password = getpass.getpass("Enter password: ")
     sftp_client.connect()
     found = sftp_client.search_remote("test")
     
@@ -21,7 +20,7 @@ def main():
     print(f"REMOTE FILE LIST: {remote_file_list}")
 
     local_file_list = list()
-    sftp_client.set_download_location("C:\\Users\\mattt\\Downloads")
+    sftp_client.set_download_location("/Users/matt/Desktop/test_download")
     
     result = sftp_client.download_all(remote_file_list, local_file_list)
     print(result)
