@@ -2,6 +2,7 @@ import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
 import sys
 import os
+import stat
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
@@ -313,6 +314,30 @@ class SFTP:
         except Exception as e:
             self.print_error(f"Failed to download file {source_tok[-1]} to {local_path}", e, True)
             return None
+
+    # Copy a remote dir (`remote_dir`) from the sftp server to the local host as `local_path`.
+    def copy_dir(self, remote_dir, local_dir):
+        if os.path.isfile(local_dir):
+            self._debug_logger.debug(f"{local_dir} is file")
+            return (False, f"Cannot copy directory to file")
+        elif not os.path.exists(local_dir):
+            self._debug_logger.debug(f"{local_dir} doesn't exist, creating directory")
+            os.mkdir(local_dir)
+
+        try:
+            for entry in self._SFTP.listdir(remote_dir):
+                remote_path = remote_dir + '/' + entry
+                local_path = os.path.join(local_dir, entry)
+                file_attr = self._SFTP.stat(remote_path)
+                if stat.S_ISREG(file_attr.st_mode):
+                    self.download(remote_path, local_path)
+                elif stat.S_ISDIR(file_attr.st_mode):
+                    os.mkdir(local_path)
+                    self.copy_dir(remote_path, local_path)
+        except FileNotFoundError as e:
+            # This is only expected to happen on the initial `listdir`
+            self._debug_logger.debug(str(e))
+            return (False, f"Path {remote_dir} does not exist")
 
 
     def print_debug(self, message, e = None, out = True):
