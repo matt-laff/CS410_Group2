@@ -228,6 +228,31 @@ class SFTP:
             self._debug_logger.error(f"Failed to list contents of directory: {e}")
 
 
+    #TODO - fix bitmask issues or figure out permission differences of directories
+    def search_remote(self, pattern, remote_dir):
+        found_files = []
+        print(remote_dir) 
+        for dir in self._SFTP.listdir_attr(remote_dir):
+            if (dir.filename[0] == "."):
+                continue
+            print(f"Loop dir: {dir.filename}")
+            print(f"bitmask?: {dir.st_mode & IS_DIR}")
+            if (dir.st_mode & IS_DIR):
+                print(f"IS_DIR: {dir.filename}")
+                self.search_remote(pattern, dir)
+                found_files += self.search_dir(dir, pattern)
+        return found_files
+
+            
+    
+    def search_dir(self, pattern, dir):
+        found_files = []
+        for file in self._SFTP.listdir_attr(dir):
+            if pattern in file.filename:
+                found_files.append(file)
+        return found_files
+
+
     def download_all(self, remote_path_list, local_path_list):
         success = (False, "")
         if (len(local_path_list) == 0): # Empty local path, default to current directory
