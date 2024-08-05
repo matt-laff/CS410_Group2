@@ -5,7 +5,33 @@ from src.menu import Menu
 from src import SFTP, setup_logger
 
 def main():
+
     sftp_client = SFTP()
+
+    sftp_client._host = "ada.cs.pdx.edu"
+    sftp_client._port = 22
+    sftp_client._username = "matt"
+    sftp_client._password = "7357ingS1!"
+
+    sftp_client.connect()
+    found = sftp_client.search_remote("test")
+    
+
+    remote_file_list = list(found)
+    print(f"REMOTE FILE LIST: {remote_file_list}")
+
+    local_file_list = list()
+    sftp_client.set_download_location("C:\\Users\\mattt\\Downloads")
+    
+    result = sftp_client.download_all(remote_file_list, local_file_list)
+    print(result)
+
+
+
+
+
+    return
+
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
     test_menu.add_option("login", login, sftp_client)
