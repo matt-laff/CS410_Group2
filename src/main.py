@@ -1,10 +1,16 @@
 import sys
 import getpass
 import os
+import builtins
 from src.menu import Menu
 from src import SFTP, setup_logger
+from src.input_decorator import input_with_timeout
+from src.input_decorator import InputTimeoutError
 
 def main():
+    # Override the built-in input function
+    simple_input = builtins.input
+    builtins.input = input_with_timeout()(builtins.input)  # Apply timeout decorator to built-in input
     sftp_client = SFTP() 
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
@@ -29,7 +35,25 @@ def main():
             result = test_menu.execute_option(option_selection)
             print(result[1])
             if (option_selection != "Exit"): 
-                input("\nPress Enter to continue...")
+                simple_input("\nPress Enter to continue...")
+        except InputTimeoutError as e:
+
+            #!MAYBE ADD THIS DUAL TIMER THINGIY
+            '''
+            if(sftp_client.check_connection()[0] == True):
+                print("Due to inactivity, you were logged out for security reasons")
+                sftp_client.disconnect()
+                continue 
+            else:
+            if os.name == 'nt':  # For Windows
+                _ = os.system('cls')
+            else: #TODO: check if this works on mac
+                _ = os.system('clear')
+            '''
+            print("Due to inactivity, the program was shut down for security reasons")
+
+            sys.exit()
+
         except Exception as e:
             print(f"There was an error with your selection: {e}")
         
