@@ -371,3 +371,25 @@ def test_change_permissions_failure(client):
     new_mode = 0o644  # Desired permissions
     captured = client.change_permissions(remote_path, new_mode)
     assert ((captured[0]== False) and (captured[1]=="Failed to change permissions for non_existent_file.txt: [Errno 2] No such file"))
+
+def test_copy_dir(client):
+    local_path = os.path.join(TMP, "test_copy_dir")
+    client.copy_dir("incoming", local_path)
+    all_files = []
+    for root, _, files in os.walk(local_path):
+        for file in files:
+            relative_path = os.path.relpath(os.path.join(root, file), local_path)
+            all_files.append(relative_path)
+
+    assert (set(all_files) == set(['file2.txt', 'file1.txt', 'subdirectory/file3.txt']))
+
+def test_diff(client):
+    assert (client.diff("incoming/file1.txt", "incoming/file2.txt") == 
+            """--- incoming/file1.txt
+
++++ incoming/file2.txt
+
+@@ -1 +1 @@
+
+-file1
++file2""")
