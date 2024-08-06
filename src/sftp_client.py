@@ -340,7 +340,7 @@ class SFTP:
             self._debug_logger.debug(str(e))
             return (False, f"Path {remote_dir} does not exist")
 
-    # Compares two files on the remote server and returns whether or not the content is different
+    # Returns the diff of two files on the remote sftp server
     def diff(self, remote_path_one, remote_path_two):
         with self._SFTP.file(remote_path_one, mode='r') as file_one:
             with self._SFTP.file(remote_path_two, mode='r') as file_two:
