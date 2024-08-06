@@ -360,3 +360,14 @@ def test_copy_dir(client):
             all_files.append(relative_path)
 
     assert (set(all_files) == set(['file2.txt', 'file1.txt', 'subdirectory/file3.txt']))
+
+def test_diff(client):
+    assert (client.diff("incoming/file1.txt", "incoming/file2.txt") == 
+            """--- incoming/file1.txt
+
++++ incoming/file2.txt
+
+@@ -1 +1 @@
+
+-file1
++file2""")

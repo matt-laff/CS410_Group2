@@ -3,6 +3,7 @@ from paramiko.ssh_exception import SSHException, AuthenticationException
 import sys
 import os
 import stat
+import difflib
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
@@ -338,6 +339,13 @@ class SFTP:
             # This is only expected to happen on the initial `listdir`
             self._debug_logger.debug(str(e))
             return (False, f"Path {remote_dir} does not exist")
+
+    # Compares two files on the remote server and returns whether or not the content is different
+    def diff(self, remote_path_one, remote_path_two):
+        with self._SFTP.file(remote_path_one, mode='r') as file_one:
+            with self._SFTP.file(remote_path_two, mode='r') as file_two:
+                diff = difflib.unified_diff(file_one.readlines(), file_two.readlines(), fromfile=remote_path_one, tofile=remote_path_two)
+                return '\n'.join(diff)
 
 
     def print_debug(self, message, e = None, out = True):
