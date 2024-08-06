@@ -93,14 +93,7 @@ class SFTP:
         self._username = None
         self._password = None
 
-        #Close open SFTP client
-        if self._SFTP != None: 
-            self._SFTP.close()
-
-        #Close open transport
-        if self._transport != None:
-            self._transport.close()
-
+        self.disconnect()
         #Security: set connect objects to NUll
         self._transport = None
         self._SFTP = None
@@ -129,9 +122,8 @@ class SFTP:
 
         except AuthenticationException as e:
             self._debug_logger.error(f"Authentication failed: {str(e)}")
-            if self._transport:
-                self._transport.close()
-            
+
+            self.disconnect()
             self._transport = None
             self._SFTP = None
 
@@ -139,9 +131,7 @@ class SFTP:
 
         except Exception as e:
             self._debug_logger.error(f"Unexpected error during SFTP connection: {str(e)}")
-            if self._transport:
-                self._transport.close()
-
+            self.disconnect()
             self._transport = None
             self._SFTP = None
 
@@ -346,6 +336,68 @@ class SFTP:
             with self._SFTP.file(remote_path_two, mode='r') as file_two:
                 diff = difflib.unified_diff(file_one.readlines(), file_two.readlines(), fromfile=remote_path_one, tofile=remote_path_two)
                 return '\n'.join(diff)
+
+    def disconnect(self):
+        self._debug_logger.debug("Initiating disconnection process")
+
+        client_error = None
+        transport_error = None
+        
+        # Close SFTP client
+        if self._SFTP:
+            try:
+                self._debug_logger.debug("Closing SFTP client")
+                self._SFTP.close()
+                self._debug_logger.debug("SFTP client closed successfully")
+            except Exception as e:
+                error_msg = f"Error closing SFTP client: {str(e)}"
+                self._debug_logger.error(error_msg)
+                client_error = error_msg
+            finally:
+                self._SFTP = None
+        
+        # Close SSH transport
+        if self._transport.is_active():
+            try:
+                self._debug_logger.debug("Closing SSH transport")
+                self._transport.close()
+                self._debug_logger.debug("SSH transport closed successfully")
+            except Exception as e:
+                error_msg = f"Error closing SSH transport: {str(e)}"
+                self._debug_logger.error(error_msg)
+                transport_error = error_msg
+            finally:
+                self._transport = None
+        
+        self._debug_logger.debug("Disconnection process completed")
+
+        if client_error and transport_error:
+            return (False, f"{client_error}; {transport_error}")
+        elif client_error:
+            return (False, client_error)
+        elif transport_error:
+            return (False, transport_error)
+        else:
+            return (True)
+
+
+    def check_connection(self):
+
+        if self._SFTP is None or self._transport is None:
+            print(self)
+            self._debug_logger.error("Not connected to a server, check_connection() Failed") 
+            return (False, ("Not connected to an SFTP server"))
+    
+        elif not self._transport.is_active():
+            print(self)
+            self._debug_logger.error("Not connected to a server, check_connection()) Failed") 
+            return (False, ("Not connected to an SFTP server"))
+
+        else:
+            return True
+
+        
+
 
 
     def print_debug(self, message, e = None, out = True):
