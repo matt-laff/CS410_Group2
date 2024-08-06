@@ -5,7 +5,7 @@ from src.menu import Menu
 from src import SFTP, setup_logger
 
 def main():
-    sftp_client = SFTP()
+    sftp_client = SFTP() 
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
     test_menu.add_option("login", login, sftp_client)
@@ -15,6 +15,7 @@ def main():
     test_menu.add_option("download multiple files", download_all, sftp_client)
     test_menu.add_option("upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
+    test_menu.add_option("Search remote server", search_remote, sftp_client)
     test_menu.add_option("file diff", diff, sftp_client)
     test_menu.add_option("Exit", exit)
 
@@ -101,10 +102,18 @@ def remove_remote_dir(sftp_client):
         remote_dir_path = input("Enter the directory to delete: ")
         return sftp_client.rmdir(remote_dir_path)
 
+
+def search_remote(sftp_client):
+    if (sftp_client.list_directory()):
+        search_pattern = input("Enter a filename or pattern to search for: ")
+        return sftp_client.search_remote(search_pattern)
+
+
 def diff(sftp_client):
     remote_path_one = input("Enter remote path one: ") 
     remote_path_two = input("Enter remote path two: ")
     print(sftp_client.diff(remote_path_one, remote_path_two))
+
 
 def exit():
     return (True, "Exiting...")

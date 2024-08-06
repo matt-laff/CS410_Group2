@@ -37,18 +37,40 @@ def mock_client():
         mock_instance = mock.return_value
         yield mock_instance
 
+
+############ Search Remote Tests ############
+def test_search_remote_success(client):
+    pattern = "file"
+    result = client.search_remote(pattern)
+
+    assert(result[0] == True)
+
+    result[1].sort() 
+    assert(result[1][0] == "//archive/file7.txt")
+    assert(result[1][1] == "//archive/subdirectory/file8.txt")
+    assert(result[1][2] == "//incoming/file1.txt")
+    assert(result[1][3] == "//incoming/file2.txt")
+    assert(result[1][4] == "//incoming/subdirectory/file3.txt")
+    assert(result[1][5] == "//outgoing/file4.txt")
+    assert(result[1][6] == "//outgoing/file5.txt")
+    assert(result[1][7] == "//outgoing/subdirectory/file6.txt")
+
+
+def test_search_remote_failure(client):
+    pattern = "badpattern"
+    result = client.search_remote(pattern)
+    assert(result[0] == False)
+    assert(result[1] == "No files located")
+
+############ Download Tests ############
+
 def test_download_success(client):
     local_file_path = get_local_file_path("test.txt")
 
-    print("\n*****************")
     data = client._SFTP.stat("incoming/file1.txt")
-    print(data)
     dir_data = client._SFTP.stat("incoming")
     client._SFTP.chmod("incoming", 0)
-    print(dir_data)
     dir_data = client._SFTP.stat("incoming")
-    print(dir_data)
-    print("*****************")
     success = client.download("incoming/file1.txt", local_file_path)
     file_exists = os.path.isfile(local_file_path)
     with open(local_file_path, 'r') as file:

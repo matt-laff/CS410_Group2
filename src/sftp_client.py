@@ -110,7 +110,6 @@ class SFTP:
 
 
     def connect(self):
-
         try:
 
             # Initialize SSH transport layer for the connection.
@@ -230,6 +229,47 @@ class SFTP:
             self._debug_logger.error(f"Failed to list contents of directory: {e}")
 
 
+    def search_remote(self, pattern):
+        curr_dir = self._SFTP.normalize(".")
+        found_files = []
+        found_files = self.search_remote_recursive(pattern, curr_dir)
+        self._SFTP.chdir(curr_dir)
+        if (len(found_files) == 0):
+            return (False, "No files located")
+        return (True, found_files)
+
+    def search_remote_recursive(self, pattern, remote_dir):
+        found_files = []
+        self._SFTP.chdir(remote_dir)
+        try:
+            for item in self._SFTP.listdir_attr():
+                if (item.filename[0] != "." ):
+                    path = self.get_dir_path(item, remote_dir)
+                    file_stat = self._SFTP.stat(path)
+                    if (stat.S_ISDIR(file_stat.st_mode)):
+                        try:
+                            found_files += self.search_remote_recursive(pattern, path)
+                        except Exception as e:
+                            print(f"Exception:  {e}  , path: {path}")
+                            continue
+                    else:
+                        if pattern in item.filename:
+                            found_files.append(path)
+        except Exception as e:
+            print(f"Exception:  {e}")
+        return found_files
+
+    def get_dir_path(self, file_attr, remote_dir):
+        path = remote_dir + '/' + file_attr.filename
+        if stat.S_ISLNK(file_attr.st_mode):
+            target_path = self._SFTP.readlink(path) 
+
+            found_attr = self._SFTP.stat(target_path)
+            if stat.S_ISDIR(found_attr.st_mode):
+                return target_path
+        return path
+
+    #! TODO: What about files from different directories with the same name?
     def download_all(self, remote_path_list, local_path_list):
         success = (False, "")
         if (len(local_path_list) == 0): # Empty local path, default to current directory
