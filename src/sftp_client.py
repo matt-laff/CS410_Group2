@@ -397,7 +397,7 @@ class SFTP:
                 self._SFTP = None
         
         # Close SSH transport
-        if self._transport.is_active():
+        if self._transport != None and self._transport.is_active():
             try:
                 self._debug_logger.debug("Closing SSH transport")
                 self._transport.close()
@@ -418,23 +418,21 @@ class SFTP:
         elif transport_error:
             return (False, transport_error)
         else:
-            return (True)
+            return (True, "Successfully disconnected")
 
 
     def check_connection(self):
 
         if self._SFTP is None or self._transport is None:
-            print(self)
             self._debug_logger.error("Not connected to a server, check_connection() Failed") 
-            return (False, ("Not connected to an SFTP server"))
+            return (False, "Not connected to an SFTP server")
     
         elif not self._transport.is_active():
-            print(self)
-            self._debug_logger.error("Not connected to a server, check_connection()) Failed") 
-            return (False, ("Not connected to an SFTP server"))
+            self._debug_logger.error("Transport not connected to a server, check_connection()) Failed") 
+            return (False, "Not connected to an SFTP server")
 
         else:
-            return True
+            return (True, "")
 
         
 
