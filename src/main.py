@@ -5,32 +5,7 @@ from src.menu import Menu
 from src import SFTP, setup_logger
 
 def main():
-
-    sftp_client = SFTP()
-
-    sftp_client._host = "ada.cs.pdx.edu"
-    sftp_client._port = 22
-    sftp_client._username = "matt"
-    sftp_client._password = getpass.getpass("Enter password: ")
-    sftp_client.connect()
-    found = sftp_client.search_remote("test")
-    
-
-    remote_file_list = list(found)
-    print(f"REMOTE FILE LIST: {remote_file_list}")
-
-    local_file_list = list()
-    sftp_client.set_download_location("/Users/matt/Desktop/test_download")
-    
-    result = sftp_client.download_all(remote_file_list, local_file_list)
-    print(result)
-
-
-
-
-
-    return
-
+    sftp_client = SFTP() 
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
     test_menu.add_option("login", login, sftp_client)
@@ -40,6 +15,7 @@ def main():
     test_menu.add_option("download multiple files", download_all, sftp_client)
     test_menu.add_option("upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
+    test_menu.add_option("Search remote server", search_remote, sftp_client)
     test_menu.add_option("Exit", exit)
 
     option_selection = None
@@ -124,6 +100,11 @@ def remove_remote_dir(sftp_client):
     if (sftp_client.list_directory()):
         remote_dir_path = input("Enter the directory to delete: ")
         return sftp_client.rmdir(remote_dir_path)
+
+def search_remote(sftp_client):
+    if (sftp_client.list_directory()):
+        search_pattern = input("Enter a filename or pattern to search for: ")
+        return sftp_client.search_remote(search_pattern)
 
 
 def exit():

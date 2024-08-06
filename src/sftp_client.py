@@ -109,7 +109,6 @@ class SFTP:
 
 
     def connect(self):
-
         try:
 
             # Initialize SSH transport layer for the connection.
@@ -231,11 +230,12 @@ class SFTP:
 
     def search_remote(self, pattern):
         curr_dir = self._SFTP.normalize(".")
-        print(f"Top Directory: {curr_dir}")
         found_files = []
         found_files = self.search_remote_recursive(pattern, curr_dir)
         self._SFTP.chdir(curr_dir)
-        return found_files
+        if (len(found_files) == 0):
+            return (False, "No files located")
+        return (True, found_files)
 
     def search_remote_recursive(self, pattern, remote_dir):
         found_files = []
