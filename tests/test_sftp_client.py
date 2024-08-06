@@ -374,6 +374,8 @@ def test_change_permissions_failure(client):
 
 def test_copy_dir(client):
     local_path = os.path.join(TMP, "test_copy_dir")
+    print(f"**** Local path: ***** {local_path}")
+
     client.copy_dir("incoming", local_path)
     all_files = []
     for root, _, files in os.walk(local_path):
@@ -381,7 +383,8 @@ def test_copy_dir(client):
             relative_path = os.path.relpath(os.path.join(root, file), local_path)
             all_files.append(relative_path)
 
-    assert (set(all_files) == set(['file2.txt', 'file1.txt', 'subdirectory/file3.txt']))
+    file3 = os.path.join("subdirectory", "file3.txt")
+    assert (set(all_files) == set(['file2.txt', 'file1.txt', file3]))
 
 def test_diff(client):
     assert (client.diff("incoming/file1.txt", "incoming/file2.txt") == 

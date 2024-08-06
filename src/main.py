@@ -9,7 +9,9 @@ def main():
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
     test_menu.add_option("login", login, sftp_client)
-    test_menu.add_option("list", list_dir, sftp_client)
+    test_menu.add_option("disconnect", disconnect, sftp_client)
+    test_menu.add_option("list files on remote server", list_remote, sftp_client)
+    test_menu.add_option("list files on local server", list_local, sftp_client)
     test_menu.add_option("set default download location", set_download, sftp_client)
     test_menu.add_option("download file", download, sftp_client)
     test_menu.add_option("download multiple files", download_all, sftp_client)
@@ -35,8 +37,6 @@ def main():
 
 # Input/Validation function requirements: return result of sftp_client function call
 def login(sftp_client):
-
-    
     hostname = None
     port = None
     username = None
@@ -58,25 +58,39 @@ def login(sftp_client):
     return sftp_client.connect()
     
 
+def disconnect(sftp_client):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        return sftp_client.disconnect()
+    else:
+        return (False, "Not currently connected to a remote server")
+
+
 def set_download(sftp_client):
     download_path = input("Enter download path: ")
     return sftp_client.set_download_location(download_path)
 
 
-def list_dir(sftp_client):
-    print(sftp_client)
+def list_remote(sftp_client):
     return sftp_client.list_directory()
 
+def list_local(sftp_client):
+    return sftp_client.list_directory_local()
 
 def download(sftp_client):
-    if (sftp_client.list_directory()):
+    connected = sftp_client.check_connection()
+    if (connected[0] == True):
+        sftp_client.list_directory()
         remote_path = input("Enter the file to download: ")
         local_path = input("Enter the local path: ")
         return sftp_client.download(remote_path, local_path)
+    return (False, "Not connected to server")
 
 
 def download_all(sftp_client):
-    if (sftp_client.list_directory()):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
         remote_file_str= input("Enter the files you want to download, separated by a space:\n")
         remote_file_list = remote_file_str.split(' ')
 
@@ -89,31 +103,45 @@ def download_all(sftp_client):
         
         return sftp_client.download_all(remote_file_list, local_file_list)
 
+    return (False, "Not connected to server")
 
 def upload(sftp_client):
-    if (sftp_client.list_directory_local()):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory_local()
         local_path = input("Enter the file to upload: ")
         if (sftp_client.list_directory()):
             remote_path = input("Enter the remote path: ")
             return sftp_client.put(local_path, remote_path)
+    return (False, "Not connected to server")
 
 def remove_remote_dir(sftp_client):
-    if (sftp_client.list_directory()):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
         remote_dir_path = input("Enter the directory to delete: ")
         return sftp_client.rmdir(remote_dir_path)
 
+    return (False, "Not connected to server")
 
 def search_remote(sftp_client):
-    if (sftp_client.list_directory()):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
         search_pattern = input("Enter a filename or pattern to search for: ")
         return sftp_client.search_remote(search_pattern)
 
+    return (False, "Not connected to server")
 
 def diff(sftp_client):
-    remote_path_one = input("Enter remote path one: ") 
-    remote_path_two = input("Enter remote path two: ")
-    print(sftp_client.diff(remote_path_one, remote_path_two))
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
+        remote_path_one = input("Enter remote path one: ") 
+        remote_path_two = input("Enter remote path two: ")
+        print(sftp_client.diff(remote_path_one, remote_path_two))
 
+    return (False, "Not connected to server")
 
 def exit():
     return (True, "Exiting...")
