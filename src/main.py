@@ -15,6 +15,7 @@ def main():
     test_menu.add_option("download multiple files", download_all, sftp_client)
     test_menu.add_option("upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
+    test_menu.add_option("file diff", diff, sftp_client)
     test_menu.add_option("Exit", exit)
 
     option_selection = None
@@ -100,6 +101,10 @@ def remove_remote_dir(sftp_client):
         remote_dir_path = input("Enter the directory to delete: ")
         return sftp_client.rmdir(remote_dir_path)
 
+def diff(sftp_client):
+    remote_path_one = input("Enter remote path one: ") 
+    remote_path_two = input("Enter remote path two: ")
+    print(sftp_client.diff(remote_path_one, remote_path_two))
 
 def exit():
     return (True, "Exiting...")
