@@ -147,12 +147,8 @@ class SFTP:
             return (False, ("Not connected to an SFTP server"))
         
         try:
-             # Get the current working directory on the remote server
-            #? Why dose this fail
-            #!cwd = self._SFTP.getcwd() 
 
             # Assuming self._SFTP is an instance of paramiko.SFTPClient
-            #!directory_contents = self._SFTP.listdir(cwd)
             directory_contents = self._SFTP.listdir()
             for item in directory_contents:
                 print(item)
@@ -161,7 +157,7 @@ class SFTP:
             self._debug_logger.error(f"Failed to list remote directory: {e}")
             return (False , (f"Failed to list remote directory: {e}"))
         
-        #!self._debug_logger.debug(f"Successfully listed items in remote directory: {cwd}  ")
+        self._debug_logger.debug(f"Successfully listed items in current remote directory")
         return (True, "") # Need empty string to fit convention
 
 
