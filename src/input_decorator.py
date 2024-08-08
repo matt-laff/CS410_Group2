@@ -26,14 +26,14 @@ def input_with_timeout(timeout=10): #define the timeout paramaters
 
             #~~~~~~INPUT LOGIC~~~~~~#
 
-            def input_thread(result):  # Define funciton to take input
+            def input_thread(result):  # Define funciton to capture inputs() r-value
 
                 result['value'] = func(*args, **kwargs)  # Call original input function and caputre return
                 result['received'] = True  # Set flag that input was received to TRUE if input actually happend before timemout
 
             #~~~~~~~~~~~~~~~~~~~~~~~#
             
-            #Start of the wrapper and true call structure
+            #Start of the wrapper and true logical function execution start
             result = {'value': None, 'received': False}  # Initialize result dictionary in wrapper
 
 
