@@ -4,6 +4,7 @@ import sys
 import os
 import stat
 import difflib
+import hashlib
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
@@ -434,7 +435,28 @@ class SFTP:
         else:
             return (True, "")
 
-        
+
+    def save_credentials(self, path, host, port, username, password):
+        filename = username+password 
+
+        print(f"FILENAME: {filename}")
+
+        hash_obj = hashlib.sha256()
+        hash_obj.update(filename.encode('utf-8'))
+        filename = hash_obj.hexdigest()
+
+        print(f"hash str: {filename}")
+        filepath = os.path.join(path, filename) + str('.txt')
+        try:
+            with open(filepath, 'a') as file:
+                file.write(f"{host}\n")
+                file.write(f"{port}\n")
+                file.write(f"{username}\n")
+                file.write(f"{password}\n")
+        except Exception as e:
+            print(e)
+            return (False, "Failed to save credentials to file")
+        return (True, "Successfully saved credentials")
 
 
 
