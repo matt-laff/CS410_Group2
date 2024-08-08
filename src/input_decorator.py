@@ -57,22 +57,3 @@ def input_with_timeout(timeout=10): #define the timeout paramaters
         return wrapper  # Return the wrapper function
 
     return decorator  # Return the decorator
-
-
-
-
-# Override the built-in input function
-builtins.input = input_with_timeout()(builtins.input)  # Apply timeout decorator to built-in input
-
-
-#------------------------------MAIN--------------------------------------------------------------
-"""
-# Now every call to input() will use the timeout functionality
-try:
-    user_input = input("Enter something within 5 seconds: ")  # Call input with timeout again
-    print(f"You entered: {user_input}")  # Print user input if received
-
-
-except InputTimeoutError:
-    print("Timed out boi")
-"""

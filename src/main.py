@@ -35,22 +35,11 @@ def main():
             result = test_menu.execute_option(option_selection)
             print(result[1])
             if (option_selection != "Exit"): 
-                simple_input("\nPress Enter to continue...")
+                #simple_input("\nPress Enter to continue...")
+                input("\nPress Enter to continue...")
         except InputTimeoutError as e:
 
-            #!MAYBE ADD THIS DUAL TIMER THINGIY
-            '''
-            if(sftp_client.check_connection()[0] == True):
-                print("Due to inactivity, you were logged out for security reasons")
-                sftp_client.disconnect()
-                continue 
-            else:
-            if os.name == 'nt':  # For Windows
-                _ = os.system('cls')
-            else: #TODO: check if this works on mac
-                _ = os.system('clear')
-            '''
-            print("Due to inactivity, the program was shut down for security reasons")
+            print("\nDue to inactivity, the program was shut down for security reasons")
 
             sys.exit()
 
