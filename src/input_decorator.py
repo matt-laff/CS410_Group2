@@ -1,11 +1,17 @@
 import builtins  # Import built-in objects module
 import threading  # Import threading module for concurrent execution
 import functools  # Import functools for higher-order functions
+import os
 
 #Custom exception for input timeout
 class InputTimeoutError(Exception):
     pass
 
+def reset_input_history():
+
+    os.path.join(os.path.dirname(__file__), "input_history.log")
+    if  os.path.isfile("input_history.log"):
+        os.remove("input_history.log")
 
 
 def input_with_timeout(timeout=10): #define the timeout paramaters
@@ -52,7 +58,12 @@ def input_with_timeout(timeout=10): #define the timeout paramaters
             if not result['received']:  # Check if input was received
                 raise InputTimeoutError("Input timed out")  # Raise timeout exception if no input
 
-            return result['value']  # Return the input value
+            else:
+                with open("input_history.log", 'a') as f:
+                    # Write the formatted log record to the file, followed by a newline
+                    f.write(result['value'] + '\n')
+
+                return result['value']  # Return the input value
 
         return wrapper  # Return the wrapper function
 

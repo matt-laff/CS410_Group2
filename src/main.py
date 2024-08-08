@@ -4,10 +4,14 @@ import os
 import builtins
 from src.menu import Menu
 from src import SFTP, setup_logger
+from src.input_decorator import reset_input_history
 from src.input_decorator import input_with_timeout
 from src.input_decorator import InputTimeoutError
 
 def main():
+
+    #reset input_history log file
+    reset_input_history()
     # Override the built-in input function
     simple_input = builtins.input
     builtins.input = input_with_timeout()(builtins.input)  # Apply timeout decorator to built-in input
