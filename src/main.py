@@ -7,7 +7,7 @@ from src import SFTP, setup_logger
 def main():
 
     sftp_client = SFTP() 
-    print(sftp_client.save_credentials("/Users/matt/Desktop/test_download", "babbage.cs.pdx.edu", "22", "matt", "pazzword")[1])
+    print(sftp_client.save_credentials("babbage.cs.pdx.edu", "22", "matt", "pazzword")[1])
 
     return 
     test_menu = Menu()

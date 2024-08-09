@@ -1,3 +1,4 @@
+import cryptography.fernet
 import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
 import sys
@@ -5,6 +6,7 @@ import os
 import stat
 import difflib
 import hashlib
+import cryptography
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
@@ -436,17 +438,23 @@ class SFTP:
             return (True, "")
 
 
-    def save_credentials(self, path, host, port, username, password):
+    def save_credentials(self, host, port, username, password):
         filename = username+password 
 
         print(f"FILENAME: {filename}")
+        e_host = self.encrypt(host)
+        e_port = self.encrypt(str(port))
+        e_user = self.encrypt(username)
+        e_pass = self.encrypt(password)
 
-        hash_obj = hashlib.sha256()
-        hash_obj.update(filename.encode('utf-8'))
-        filename = hash_obj.hexdigest()
+        print(f"Host: {host} : {e_host}")
+        print(f"Port: {port} : {e_port}")
+        print(f"Host: {username} : {e_user}")
+        print(f"Host: {password} : {e_pass}")
 
-        print(f"hash str: {filename}")
-        filepath = os.path.join(path, filename) + str('.txt')
+
+
+        filepath = os.path.join("data", filename) + str('.txt')
         try:
             with open(filepath, 'a') as file:
                 file.write(f"{host}\n")
@@ -457,6 +465,53 @@ class SFTP:
             print(e)
             return (False, "Failed to save credentials to file")
         return (True, "Successfully saved credentials")
+
+
+    # General Idea:
+    # Act like an SFTP program like cyberduck or mobaxterm; saved configurations are loaded on startup
+    # Each time user saves connection information:
+        # Generate key - #! problem: If I generate a new key on every encryption, that scales terribly
+        # encrypt all fields and write them to s
+
+    # Loading saved connection information:
+        # Press menu option or do it implicitly?
+            # Menu option - press option, open file, decrypt hostname and name fields (ada.cs.pdx.edu : matt), print w/ numbers, select number, login
+            # Implicitly - on program start, open key file, store key, open saved info file, decrypt and print
+
+
+    def get_key(self):
+        key = cryptography.fernet.Fernet.generate_key()
+        filepath = os.path.join("data", "key.txt")
+        if not(os.path.isfile(filepath)):
+            print("WRITING")
+            with open(filepath, "wb") as file:
+                file.write(key)
+        else:
+            print("READING")
+            with open(filepath, "rb") as file:
+                key = file.read()
+                #key = key.encode('utf-8')
+
+        print(f"KEY RETURN: {key}") 
+        return key
+
+
+    def encrypt(self, str):
+
+        # First hash the filename (username + password)
+        #hash_obj = hashlib.sha256()
+        #hash_obj.update(filename.encode('utf-8'))
+        #filename = hash_obj.hexdigest()
+        #print(f"hash str: {filename}")
+        key = self.get_key()
+        encryptor = cryptography.fernet.Fernet(key)
+        b_str = str.encode('utf-8')
+        encrypted = encryptor.encrypt(b_str)
+
+        return encrypted
+
+    def decrypt(self, e_str):
+        pass
 
 
 
