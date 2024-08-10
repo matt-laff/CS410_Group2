@@ -1,12 +1,18 @@
+import cryptography.fernet
 import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
 import sys
 import os
 import stat
 import difflib
+import cryptography
+import ast
 from .log_handler import setup_logger
 
 DEFAULT_PORT = 22
+SAVED_CONNECTION_FILE = os.path.join("data", "saved.txt")
+NUM_FIELDS = 5
+CHAR_ENCODING = "utf-8"
 
 class SFTP:
 
@@ -20,6 +26,12 @@ class SFTP:
         #logger that only captures debug messages, errors, and raised values
         self._debug_logger = setup_logger('sftp_logger', 'SFTP_debug_error.log')
         self._debug_logger.debug("New SFTP Instance Created")
+
+        # Dictionary for saved connection information
+        self._connections = {}
+        self._connection_file = SAVED_CONNECTION_FILE
+        self.load_saved_connections()
+
         #Calculate the number of arguments passed to the initializer. Will use as key for constructor calling.
         arg_len = len(args)
 
@@ -55,6 +67,7 @@ class SFTP:
          # Initialize connection objects
         self._transport = None
         self._SFTP = None
+
 
 
     # Dependency injection of the SFTPClient for unit testing
@@ -100,6 +113,36 @@ class SFTP:
 
         # Download path
         self._download_location = None
+
+    # Connect wrapper that sets credentials 
+    def quick_connect(self, connection_name):
+        if not connection_name in self._connections.keys():
+            return (False, "No saved connection with that name")
+        try:
+            self._port = int(self._connections[connection_name]["port"])
+        except Exception as e:
+            self._debug_logger.error(f"Failed to cast port to int, exception {str(e)}")
+
+
+        self._host = self._connections[connection_name]["host"]
+        self._username = self._connections[connection_name]["username"]
+        e_password = self._connections[connection_name]["password"]
+
+        e_password = ast.literal_eval(e_password) 
+        self._password = self.decrypt(e_password).decode("utf-8")
+
+
+         # Initialize connection objects
+        self._transport = None
+        self._SFTP = None
+
+        return self.connect()
+
+
+    #destructor
+    def __del__(self):
+        #Security: set values to none to prevent collection
+        self._port = None
 
 
     def connect(self):
@@ -205,7 +248,7 @@ class SFTP:
         self._debug_logger.debug(f"Successfully changed permissions to {mode} for {remote_path}")
         return (True, f"Successfully changed permissions to {mode} for {remote_path}")
 
-
+    # Lists directory contents with file attributes (mode, atime, etc.)
     def list_full(self):
         if self._SFTP is None:
             return (False, "Not connected to a server, list with attributes failed." )
@@ -218,16 +261,17 @@ class SFTP:
         except Exception as e:
             self._debug_logger.error(f"Failed to list contents of directory: {e}")
 
-
+    # Wrapper for search_remote_recursive
     def search_remote(self, pattern):
-        curr_dir = self._SFTP.normalize(".")
+        curr_dir = self._SFTP.normalize(".") # Get absolute path of root directory
         found_files = []
         found_files = self.search_remote_recursive(pattern, curr_dir)
-        self._SFTP.chdir(curr_dir)
+        self._SFTP.chdir(curr_dir) # Return to root directory explicitly after search
         if (len(found_files) == 0):
             return (False, "No files located")
         return (True, found_files)
 
+    # Recursively search every directory starting from the login directory
     def search_remote_recursive(self, pattern, remote_dir):
         found_files = []
         self._SFTP.chdir(remote_dir)
@@ -249,9 +293,10 @@ class SFTP:
             print(f"Exception:  {e}")
         return found_files
 
+    # Helper function for search remote to get the appropriate path to append to search path
     def get_dir_path(self, file_attr, remote_dir):
         path = remote_dir + '/' + file_attr.filename
-        if stat.S_ISLNK(file_attr.st_mode):
+        if stat.S_ISLNK(file_attr.st_mode): # Special case: dealing with a symbolic link, need to get the path of the linked location
             target_path = self._SFTP.readlink(path) 
 
             found_attr = self._SFTP.stat(target_path)
@@ -259,7 +304,7 @@ class SFTP:
                 return target_path
         return path
 
-    #! TODO: What about files from different directories with the same name?
+    # Download multiple files 
     def download_all(self, remote_path_list, local_path_list):
         success = (False, "")
         if (len(local_path_list) == 0): # Empty local path, default to current directory
@@ -318,10 +363,10 @@ class SFTP:
     def put(self, local_path, remote_path):
         try:
             self._SFTP.put(local_path, remote_path)
-            self.print_debug(f"Successfully copied {local_path} to {remote_path}", None, False)
+            self._debug_logger.debug(f"Successfully copied {local_path} to {remote_path}")
             return (True, f"Successfully copied {local_path} to {remote_path}")
         except Exception as e:
-            self.print_error(f"Failed to copy {local_path} to {remote_path}", e, False)
+            self._debug_logger.error(f"Failed to copy {local_path} to {remote_path}")
             return (False, f"Failed to copy {local_path} to {remote_path}")
 
     # put multiple local files to remote server
@@ -333,6 +378,7 @@ class SFTP:
             self.print_error("Failed to put multiple local files to remote server", e, False)
             return (False, "Failed to put multiple local files to remote server")
 
+    # Set default download location for when no local path is provided
     def set_download_location(self, download_path):
         try:
             self._download_location = download_path
@@ -361,7 +407,7 @@ class SFTP:
             return local_path
 
         except Exception as e:
-            self.print_error(f"Failed to download file {source_tok[-1]} to {local_path}", e, True)
+            self._debug_logger.error(f"Failed to download file {source_tok[-1]} to {local_path}")
             return None
 
     # Copy a remote dir (`remote_dir`) from the sftp server to the local host as `local_path`.
@@ -395,6 +441,7 @@ class SFTP:
                 diff = difflib.unified_diff(file_one.readlines(), file_two.readlines(), fromfile=remote_path_one, tofile=remote_path_two)
                 return '\n'.join(diff)
 
+    # Explicit disconnect method
     def disconnect(self):
         self._debug_logger.debug("Initiating disconnection process")
 
@@ -439,6 +486,7 @@ class SFTP:
             return (True, "Successfully disconnected")
 
 
+    # Check to see if client is currently connected to a remote server
     def check_connection(self):
 
         if self._SFTP is None or self._transport is None:
@@ -452,28 +500,113 @@ class SFTP:
         else:
             return (True, "")
 
+    # Helper function to run on instantiation - open saved.txt and store each saved connection in the self._connections dictionary 
+    def load_saved_connections(self):
+        filepath = self._connection_file
+        try:
+            with open(filepath, "r") as file:
+                lines = file.readlines()
+            i = 0
+            # Get lines and convert/decrypt each field except for password
+            while i < len(lines):
+                connection_name = lines[i].strip()
+                host = lines[i+1].strip()
+                host = ast.literal_eval(host) # Saved encoded - need to grab the literal, not the string version so we can decode it
+                host = self.decrypt(host).decode(CHAR_ENCODING)
+                
+                port = lines[i+2].strip()
+                port = ast.literal_eval(port)
+                port = self.decrypt(port).decode(CHAR_ENCODING)
+                
+                user = lines[i+3].strip()
+                user = ast.literal_eval(user)
+                user = self.decrypt(user).decode(CHAR_ENCODING)
+                
+                password = lines[i+4].strip()
+                #password = ast.literal_eval(password)
+                #password = self.decrypt(password).decode(CHAR_ENCODING) #! leave password encrypted until it needs to be used
+
+                # Add new connection information to saved connections
+                self._connections[connection_name] = {
+                    "host": host,
+                    "port": port,
+                    "username": user,
+                    "password": password
+                } 
+                i += NUM_FIELDS # Skip past fields for the iterator
+
+        except Exception as e:
+            self._debug_logger.error(f"Failed to load saved connections: {e}")
+            return (False, "Failed to load saved connections into dictionary")
         
+    # Simple display of saved connections
+    def display_saved_connections(self):
+        if (len(self._connections) == 0):
+            return (False, "No saved connections")
+        for name, subkey in self._connections.items():
+            print(f"Connection: {name}\n {subkey["host"]}\n {subkey["port"]}")
+        return (True, "")
 
-
-
-    def print_debug(self, message, e = None, out = True):
-        if (e == None):
-            if (out == True):
-                print(message)
-            self._debug_logger.debug(f"{message}")
-        else:
-            if (out == True):
-                print(message)
-            self._debug_logger.debug(f"{message} : {e}")
+    # Append connection information to saved.txt
+    def save_credentials(self, connection_name, host, port, username, password):
+        if (connection_name in self._connections.keys()): 
+            return (False, "Connection name already exists")
         
+        filepath = self._connection_file
+
+        # Encrypt fields for writing to file
+        e_host = self.encrypt(host)
+        e_port = self.encrypt(str(port))
+        e_user = self.encrypt(username)
+        e_pass = self.encrypt(password)
+
+        # Write encrypted fields
+        try:
+            with open(filepath, 'a') as file:
+                file.write(f"{connection_name}\n")
+                file.write(f"{e_host}\n")
+                file.write(f"{e_port}\n")
+                file.write(f"{e_user}\n")
+                file.write(f"{e_pass}\n")
+
+        except Exception as e:
+            self._debug_logger.error(f"Error trying to save credentials {e}") 
+            return (False, "Failed to save credentials to file")
     
-    def print_error(self, message, e, out = True):
-        if (e == None):
-            if (out == True):
-                print(message)
-            self._debug_logger.error(f"{message}")
+        # Save connection information in saved connections dict all stored as byte strings
+        self._connections[connection_name] = {
+            "host": host,
+            "port": port,
+            "username": username,
+            "password": str(e_pass)
+        } 
+        return (True, "Successfully saved credentials")
+
+
+    #! Hacky and bad - with more time this would be more secure and avoid using a single key for every encrypted field
+    # Just use one key for all encryption, save it in data/key.txt
+    def get_key(self):
+        key = cryptography.fernet.Fernet.generate_key()
+        filepath = os.path.join("data", "key.txt")
+        if not(os.path.isfile(filepath)):
+            with open(filepath, "wb") as file:
+                file.write(key)
         else:
-            if (out == True):
-                print(message)
-            self._debug_logger.error(f"{message} : {e}")
-        
+            with open(filepath, "rb") as file:
+                key = file.read()
+        return key
+
+    # Encrypt using the key in key.txt
+    def encrypt(self, str):
+        key = self.get_key()
+        encryptor = cryptography.fernet.Fernet(key)
+        b_str = str.encode('utf-8')
+        encrypted = encryptor.encrypt(b_str)
+        return encrypted
+
+    # Decrypt using the key in key.txt
+    def decrypt(self, e_str):
+        key = self.get_key()
+        decryptor = cryptography.fernet.Fernet(key)
+        field = decryptor.decrypt(e_str)
+        return field
