@@ -18,17 +18,19 @@ def main():
     sftp_client = SFTP() 
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
-    test_menu.add_option("login", login, sftp_client)
-    test_menu.add_option("disconnect", disconnect, sftp_client)
-    test_menu.add_option("list files on remote server", list_remote, sftp_client)
-    test_menu.add_option("list files on local server", list_local, sftp_client)
-    test_menu.add_option("set default download location", set_download, sftp_client)
-    test_menu.add_option("download file", download, sftp_client)
-    test_menu.add_option("download multiple files", download_all, sftp_client)
-    test_menu.add_option("upload file", upload, sftp_client)
+    test_menu.add_option("Login", login, sftp_client)
+    test_menu.add_option("Quick Connect", quick_connect, sftp_client)
+    test_menu.add_option("Disconnect", disconnect, sftp_client)
+    test_menu.add_option("Save connection information", save_connection, sftp_client)
+    test_menu.add_option("List files on remote server", list_remote, sftp_client)
+    test_menu.add_option("List files on local server", list_local, sftp_client)
+    test_menu.add_option("Set default download location", set_download, sftp_client)
+    test_menu.add_option("Download file", download, sftp_client)
+    test_menu.add_option("Download multiple files", download_all, sftp_client)
+    test_menu.add_option("Upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
     test_menu.add_option("Search remote server", search_remote, sftp_client)
-    test_menu.add_option("file diff", diff, sftp_client)
+    test_menu.add_option("File diff", diff, sftp_client)
     test_menu.add_option("Exit", exit)
 
     option_selection = None
@@ -74,6 +76,31 @@ def login(sftp_client):
 
     return sftp_client.connect()
     
+def quick_connect(sftp_client):
+    if (sftp_client.check_connection()[0] == True):
+        return (False, "Already connected to a remote server, please disconnect and try again")
+    if (sftp_client.display_saved_connections()[0]):
+        connection_name = input("Enter the name of the connection: ")
+        return sftp_client.quick_connect(connection_name)
+    else: 
+        return (False, "Client has no saved connections")
+
+def save_connection(sftp_client):
+    hostname = None
+    port = None
+    username = None
+    password = None
+
+    hostname = input("Enter hostname: ") 
+    port = input("enter port: ")
+    username = input("enter username: ")
+    password = getpass.getpass("Enter password: ")
+
+    connection_name = input("Please name this connection: ")
+
+    result = sftp_client.save_credentials(connection_name, hostname, port, username, password)
+
+    return result
 
 def disconnect(sftp_client):
     connected = sftp_client.check_connection()
