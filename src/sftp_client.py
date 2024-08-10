@@ -300,10 +300,19 @@ class SFTP:
         try:
             self._SFTP.rmdir(remote_path)
             self._debug_logger.debug(f"Successfully removed directory at {remote_path}")
-            return (True, f"Successfuly removed directory at {remote_path}")
+            return (True, f"Successfully removed directory at {remote_path}")
         except Exception as e:
             self._debug_logger.error(f"Failed to remove directory at {remote_path}")
             return (False, f"Failed to remove directory at {remote_path}")
+
+    def remove_remote_one_file(self, remote_file_path):
+        try:
+            self._SFTP.remove(remote_file_path)
+            self._debug_logger.debug(f"Successfully removed remote file {remote_file_path}")
+            return (True, f"Successfully removed remote file {remote_file_path}")
+        except Exception as e:
+            self._debug_logger.error(f"Failed to remove remote file {remote_file_path}")
+            return (False, f"Failed to remove remote file {remote_file_path}")
     
     # Copy a local file (local_path) to the SFTP server as remote_path
     def put(self, local_path, remote_path):
