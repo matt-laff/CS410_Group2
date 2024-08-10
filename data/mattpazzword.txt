@@ -1,4 +1,0 @@
-babbage.cs.pdx.edu
-22
-matt
-pazzword
