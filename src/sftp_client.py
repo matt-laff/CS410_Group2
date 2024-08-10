@@ -305,7 +305,7 @@ class SFTP:
             self._debug_logger.error(f"Failed to remove directory at {remote_path}")
             return (False, f"Failed to remove directory at {remote_path}")
 
-    def remove_remote_one_file(self, remote_file_path):
+    def remove_one_remote_file(self, remote_file_path):
         try:
             self._SFTP.remove(remote_file_path)
             self._debug_logger.debug(f"Successfully removed remote file {remote_file_path}")

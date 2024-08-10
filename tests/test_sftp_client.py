@@ -212,10 +212,31 @@ def test_rmdir(mock_client):
     client.rmdir("/tmp")
     mock_client.rmdir.assert_called_once_with("/tmp")
 
+def test_remove_one_remote_file(mock_client):
+    client = sftp_client.SFTP(mock_client)
+    client.put("/tmp/local.txt", "/tmp/remote.txt")
+    client.remove_one_remote_file("/tmp/remote.txt")
+    result = client.search_remote("/tmp/remote.txt")
+    assert(result[0] == False)
+    assert(result[1] == "No files located")
+    
+
 def test_put(mock_client):
     client = sftp_client.SFTP(mock_client)
     client.put("/tmp/local.txt", "/tmp/remote.txt")
     mock_client.put.assert_called_once_with("/tmp/local.txt", "/tmp/remote.txt")
+
+def test_put_all(mock_client):
+    client = sftp_client.SFTP(mock_client)
+    local_path_list = ["/tmp/local1.txt",
+                       "/tmp/local2.txt",
+                       "/tmp/local3.txt"]
+    remote_path_list = ["/tmp/remote1.txt",
+                        "/tmp/remote2.txt",
+                        "/tmp/remote3.txt"]
+    client.put_all(local_path_list, remote_path_list)
+    for local_path, remote_path in zip(local_path_list, remote_path_list):
+        mock_client.put.assert_called_once_with(local_path,remote_path)
 
 
 
