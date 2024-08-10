@@ -1,6 +1,7 @@
 import pytest
 import os
 import shutil
+import ast
 from unittest.mock import MagicMock, patch
 from .conftest import get_local_file_path, TMP, CONTENT_OBJ
 from .context import src
@@ -26,8 +27,12 @@ def teardown(client):
 def client(sftpserver, content):
     sftpclient = sftp_client.SFTP(sftpserver.port, sftpserver.host, "stubUser", "stubPassword")
     sftpclient.connect()
-    #yield sftpclient   #! This stalls out my terminal on test failures
-    #del sftpclient
+    return sftpclient
+
+# Simple client no connection
+@pytest.fixture(scope="function")
+def empty_client():
+    sftpclient = sftp_client.SFTP()
     return sftpclient
 
 # Mock client for purely unit testing
@@ -38,7 +43,72 @@ def mock_client():
         yield mock_instance
 
 
+############ Saved Connection Tests ############
+def test_save_credentials_success(empty_client):
+    filepath = os.path.join(TMP, "saved.txt") 
+    empty_client._connection_file = filepath
+    empty_client.save_credentials("connection name", "test_host", 22, "test_user", "test_pass")
+    assert(os.path.isfile(filepath))
+    assert("connection name" in empty_client._connections.keys())
+    assert(empty_client._connections["connection name"]["host"] == "test_host")
+    assert(empty_client._connections["connection name"]["port"] == 22)
+    assert(empty_client._connections["connection name"]["username"] == "test_user")
+    e_pass = empty_client._connections["connection name"]["password"]
+    e_pass = ast.literal_eval(e_pass)
+    d_pass = empty_client.decrypt(e_pass).decode("utf-8")
+    assert (d_pass == "test_pass")
+
+
+def test_save_credentials_failure(empty_client):
+    filepath = os.path.join(TMP, "saved.txt") 
+    empty_client._connection_file = filepath
+    empty_client.save_credentials("connection name", "test_host", 22, "test_user", "test_pass")
+    success = empty_client.save_credentials("connection name", "test_host", 22, "test_user", "test_pass")
+    assert(success[0] == False)
+    assert(success[1] == "Connection name already exists")
+
+
+def test_load_connection_success(empty_client):
+    filepath = os.path.join(TMP, "saved.txt") 
+    empty_client._connection_file = filepath
+    empty_client.save_credentials("connection name", "test_host", 22, "test_user", "test_pass")
+    empty_client._connections = {}
+    assert(len(empty_client._connections) == 0)
+    empty_client.load_saved_connections()
+    assert(len(empty_client._connections) == 1)
+    assert("connection name" in empty_client._connections.keys())
+    assert(empty_client._connections["connection name"]["host"] == "test_host")
+    assert(empty_client._connections["connection name"]["port"] == "22")
+    assert(empty_client._connections["connection name"]["username"] == "test_user")
+    e_pass = empty_client._connections["connection name"]["password"]
+    e_pass = ast.literal_eval(e_pass)
+    d_pass = empty_client.decrypt(e_pass).decode("utf-8")
+    assert (d_pass == "test_pass")
+
+
+def test_load_connection_failure(empty_client):
+    filepath = os.path.join("nonexistant", "saved.txt") 
+    empty_client._connection_file = filepath
+    success = empty_client.load_saved_connections()
+    assert(success[0] == False)
+    assert(success[1] == "Failed to load saved connections into dictionary")
+
+
+def test_quick_connect_success(empty_client, sftpserver):
+    filepath = os.path.join(TMP, "saved.txt") 
+    empty_client._connection_file = filepath
+    empty_client.save_credentials("connection name", sftpserver.host, sftpserver.port, "stubUser", "stubPassword")
+    assert(empty_client.quick_connect("connection name")[0] == True)
+    assert(empty_client.check_connection()[0] == True)
+
+def test_quick_connect_failure(empty_client):
+    filepath = os.path.join(TMP, "saved.txt") 
+    empty_client._connection_file = filepath
+    assert(empty_client.quick_connect("connection name")[0] == False)
+    assert(empty_client.check_connection()[0] == False)
+
 ############ Search Remote Tests ############
+
 def test_search_remote_success(client):
     pattern = "file"
     result = client.search_remote(pattern)
@@ -374,7 +444,6 @@ def test_change_permissions_failure(client):
 
 def test_copy_dir(client):
     local_path = os.path.join(TMP, "test_copy_dir")
-    print(f"**** Local path: ***** {local_path}")
 
     client.copy_dir("incoming", local_path)
     all_files = []
