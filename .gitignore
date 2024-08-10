@@ -1,7 +1,8 @@
 # project specific
 credentials.txt
 SFTP_debug_error.log
-data/
+data/saved.txt
+data/key.txt
 
 # general boilerplate
 # Byte-compiled / optimized / DLL files
