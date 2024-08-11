@@ -217,7 +217,10 @@ def test_put(mock_client):
     client.put("/tmp/local.txt", "/tmp/remote.txt")
     mock_client.put.assert_called_once_with("/tmp/local.txt", "/tmp/remote.txt")
 
-
+def test_remote_rename(mock_client):
+    client = sftp_client.SFTP(mock_client)
+    client.rename("archive/file7.txt", "archive/file7_1.txt")
+    mock_client.rename.assert_called_once_with("archive/file7.txt", "archive/file7_1.txt")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
