@@ -324,7 +324,7 @@ class SFTP:
     def put_all(self, local_path_list, remote_path_list):
         try:
             for local_path, remote_path in zip(local_path_list, remote_path_list):
-                self.put(self, local_path, remote_path)
+                self.put(local_path, remote_path)
         except Exception as e:
             self.print_error("Failed to put multiple local files to remote server", e, False)
             return (False, "Failed to put multiple local files to remote server")

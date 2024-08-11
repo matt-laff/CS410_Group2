@@ -1,7 +1,7 @@
 import pytest
 import os
 import shutil
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 from .conftest import get_local_file_path, TMP, CONTENT_OBJ
 from .context import src
 from src import sftp_client 
@@ -31,7 +31,7 @@ def client(sftpserver, content):
     return sftpclient
 
 # Mock client for purely unit testing
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def mock_client():
     with patch('paramiko.SFTPClient') as mock:
         mock_instance = mock.return_value
@@ -235,8 +235,10 @@ def test_put_all(mock_client):
                         "/tmp/remote2.txt",
                         "/tmp/remote3.txt"]
     client.put_all(local_path_list, remote_path_list)
+    calls = []
     for local_path, remote_path in zip(local_path_list, remote_path_list):
-        mock_client.put.assert_called_once_with(local_path,remote_path)
+        calls.append(call.put(local_path, remote_path))
+    mock_client.assert_has_calls(calls, any_order=True)
 
 
 def test_remote_rename(mock_client):
