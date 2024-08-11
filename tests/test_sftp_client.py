@@ -484,7 +484,7 @@ def test_copy_dir(client):
     assert (set(all_files) == set(['file2.txt', 'file1.txt', file3]))
 
 def test_diff(client):
-    assert (client.diff("incoming/file1.txt", "incoming/file2.txt") == 
+    assert (client.diff("incoming/file1.txt", "incoming/file2.txt")[1] == 
             """--- incoming/file1.txt
 
 +++ incoming/file2.txt
