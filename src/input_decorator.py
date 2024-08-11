@@ -14,7 +14,7 @@ def reset_input_history():
         os.remove("input_history.log")
 
 
-def input_with_timeout(timeout=1800): #define the timeout paramaters
+def input_with_timeout(timeout=10): #define the timeout paramaters
 
     def decorator(func):  # Define Decorator and pass the function whose behavior to agment ->input
 

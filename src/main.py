@@ -23,18 +23,21 @@ def main():
     test_menu.add_option("Disconnect", disconnect, sftp_client)
     test_menu.add_option("Save connection information", save_connection, sftp_client)
     test_menu.add_option("List files on remote server", list_remote, sftp_client)
+    test_menu.add_option("List file attributes on remote server", list_remote_attr, sftp_client)
     test_menu.add_option("List files on local server", list_local, sftp_client)
     test_menu.add_option("Set default download location", set_download, sftp_client)
     test_menu.add_option("Download file", download, sftp_client)
     test_menu.add_option("Download multiple files", download_all, sftp_client)
     test_menu.add_option("Upload file", upload, sftp_client)
+    test_menu.add_option("Upload multiple files", upload_multiple, sftp_client)
+    test_menu.add_option("Create remote directory", create_remote, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
     test_menu.add_option("Search remote server", search_remote, sftp_client)
-    test_menu.add_option("file diff", diff, sftp_client)
     test_menu.add_option("Search local machine", search_local, sftp_client)
-    test_menu.add_option("rename local file", local_rename)
-    test_menu.add_option("rename remote file", remote_rename, sftp_client)
+    test_menu.add_option("Rename local file", local_rename)
+    test_menu.add_option("Rename remote file", remote_rename, sftp_client)
     test_menu.add_option("File diff", diff, sftp_client)
+    test_menu.add_option("Change permissions of a file", change_permissions, sftp_client)
     test_menu.add_option("Exit", exit)
 
     option_selection = None
@@ -126,6 +129,9 @@ def list_remote(sftp_client):
 def list_local(sftp_client):
     return sftp_client.list_directory_local()
 
+def list_remote_attr(sftp_client):
+    return sftp_client.list_full()
+
 def download(sftp_client):
     connected = sftp_client.check_connection()
     if (connected[0] == True):
@@ -164,6 +170,23 @@ def upload(sftp_client):
             return sftp_client.put(local_path, remote_path)
     return (False, "Not connected to server")
 
+def upload_multiple(sftp_client):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory_local()
+        local_file_str= input("Enter the files you want to upload, separated by a space:\n")
+        local_file_list = local_file_str.split(' ')
+
+        sftp_client.list_directory()
+        remote_file_str = input("Enter the file locations on remote server, separated by a space:\n")
+
+        remote_file_list = remote_file_str.split(' ')
+        
+        return sftp_client.put_all(local_file_list, remote_file_list)
+
+    return (False, "Not connected to server")
+        
+
 def remove_remote_dir(sftp_client):
     connected = sftp_client.check_connection()
     if (connected[0]):
@@ -172,6 +195,24 @@ def remove_remote_dir(sftp_client):
         return sftp_client.rmdir(remote_dir_path)
 
     return (False, "Not connected to server")
+
+def remove_remote_file(sftp_client):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
+        file_to_remove = input("Enter the file to remove: ")
+        return sftp_client.remove_one_remote_file(file_to_remove)
+    return (False, "Failed to remove remote file") 
+
+def change_permissions(sftp_client):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
+        path = input("Enter full path of remote file to change permissions of: ") 
+        mode = input("Enter the new permissions in octal number format:")
+        return sftp_client.change_permissions(path, mode)
+    else:
+        return (False, "Not currently connected to a remote server")
 
 def search_remote(sftp_client):
     connected = sftp_client.check_connection()
@@ -188,34 +229,48 @@ def diff(sftp_client):
         sftp_client.list_directory()
         remote_path_one = input("Enter remote path one: ") 
         remote_path_two = input("Enter remote path two: ")
-        print(sftp_client.diff(remote_path_one, remote_path_two))
+        result = sftp_client.diff(remote_path_one, remote_path_two)
+        print(result[1])
+        return (True, "")
 
     return (False, "Not connected to server")
 
 
 def search_local(sftp_client):
-    connected = sftp_client.check_connection()
-    if(connected[0]):
-        sftp_client.list_directory()
-        search_pattern = input("Enter a filename or pattern to search for: ")
-        return sftp_client.search_local(search_pattern)
-    
-    return (False, "Not connected to server")
+    sftp_client.list_directory_local()
+    search_pattern = input("Enter a filename or pattern to search for: ")
+    return sftp_client.search_local(search_pattern)
+
 
 def local_rename():
     old_path = input("Enter current path: ") 
     new_path = input("Enter new path: ")
-    os.rename(old_path, new_path)
+    try:
+        os.rename(old_path, new_path)
+        return (True, f"Successfully renamed {old_path} to {new_path}")
+    except InputTimeoutError as e:
+        raise e
+    except Exception as e:
+        return (False, "Failed to rename files")
+
 
 def remote_rename(sftp_client):
     connected = sftp_client.check_connection()
     if (connected[0]):
         sftp_client.list_directory()
-        old_path = input("Enter current path: ") 
-        new_path = input("Enter new path: ")
-        sftp_client.rename(old_path, new_path)
+        old_path = input("Enter path of file to rename: ") 
+        new_path = input("Enter full path new name: ")
+        return sftp_client.rename(old_path, new_path)
     
     return (False, "Not connected to server")
+
+def create_remote(sftp_client):
+    if (sftp_client.check_connection()[0]):
+        dir_name = input("Enter the name of the directory: ")
+        return sftp_client.mkdir(dir_name)
+    
+    return (False, "Not connected to a server")
+
 
 
 def exit():
