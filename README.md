@@ -28,5 +28,8 @@ pip install -r requirements
 # OS independant
 Now you can just run the appropriate activate script and everything should work
 
-# RUN COMMAND
+# RUN COMMAND 
 python -m src
+
+# PYTEST RUN COMMAND
+pytest
