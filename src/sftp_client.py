@@ -181,6 +181,21 @@ class SFTP:
         self._debug_logger.debug(f"Successfully listed items in local directory: {cwd} ")
         return (True, "")
 
+    #Search files on local machine
+    def search_local(self, pattern):
+        try:
+            found_files = []
+            path = os.getcwd() 
+            for root, dirs, files in os.walk(path): 
+                if pattern in files:
+                    found_files.append(os.path.join(root, pattern))
+            if (len(found_files) == 0):
+                return (False, "No files located")
+            return (True, found_files)
+        except Exception as e:
+            self._debug_logger.error(f"Failed to search for file: {e}")
+            return (False, (f"Failed to search for file: {e}"))
+
         
     # Changes the permissions of a file or directory on the remote server
     def change_permissions(self, remote_path, mode):
