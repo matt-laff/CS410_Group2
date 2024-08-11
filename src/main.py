@@ -1,27 +1,36 @@
 import sys
 import getpass
 import os
+import builtins
 from src.menu import Menu
 from src import SFTP, setup_logger
+from src.input_decorator import reset_input_history
+from src.input_decorator import input_with_timeout
+from src.input_decorator import InputTimeoutError
 
 def main():
 
+    #reset input_history log file
+    reset_input_history()
+    # Override the built-in input function
+    simple_input = builtins.input
+    builtins.input = input_with_timeout()(builtins.input)  # Apply timeout decorator to built-in input
     sftp_client = SFTP() 
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
-    test_menu.add_option("Login", login, sftp_client)
-    test_menu.add_option("Quick Connect", quick_connect, sftp_client)
-    test_menu.add_option("Disconnect", disconnect, sftp_client)
-    test_menu.add_option("Save connection information", save_connection, sftp_client)
-    test_menu.add_option("List files on remote server", list_remote, sftp_client)
-    test_menu.add_option("List files on local server", list_local, sftp_client)
-    test_menu.add_option("Set default download location", set_download, sftp_client)
-    test_menu.add_option("Download file", download, sftp_client)
-    test_menu.add_option("Download multiple files", download_all, sftp_client)
-    test_menu.add_option("Upload file", upload, sftp_client)
+    test_menu.add_option("login", login, sftp_client)
+    test_menu.add_option("disconnect", disconnect, sftp_client)
+    test_menu.add_option("list files on remote server", list_remote, sftp_client)
+    test_menu.add_option("list files on local server", list_local, sftp_client)
+    test_menu.add_option("set default download location", set_download, sftp_client)
+    test_menu.add_option("download file", download, sftp_client)
+    test_menu.add_option("download multiple files", download_all, sftp_client)
+    test_menu.add_option("upload file", upload, sftp_client)
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
     test_menu.add_option("Search remote server", search_remote, sftp_client)
-    test_menu.add_option("File diff", diff, sftp_client)
+    test_menu.add_option("file diff", diff, sftp_client)
+    test_menu.add_option("rename local file", local_rename)
+    test_menu.add_option("rename remote file", remote_rename, sftp_client)
     test_menu.add_option("Exit", exit)
 
     option_selection = None
@@ -32,7 +41,14 @@ def main():
             result = test_menu.execute_option(option_selection)
             print(result[1])
             if (option_selection != "Exit"): 
+                #simple_input("\nPress Enter to continue...")
                 input("\nPress Enter to continue...")
+        except InputTimeoutError as e:
+
+            print("\nDue to inactivity, the program was shut down for security reasons")
+
+            sys.exit()
+
         except Exception as e:
             print(f"There was an error with your selection: {e}")
         
@@ -60,31 +76,6 @@ def login(sftp_client):
 
     return sftp_client.connect()
     
-def quick_connect(sftp_client):
-    if (sftp_client.check_connection()[0] == True):
-        return (False, "Already connected to a remote server, please disconnect and try again")
-    if (sftp_client.display_saved_connections()[0]):
-        connection_name = input("Enter the name of the connection: ")
-        return sftp_client.quick_connect(connection_name)
-    else: 
-        return (False, "Client has no saved connections")
-
-def save_connection(sftp_client):
-    hostname = None
-    port = None
-    username = None
-    password = None
-
-    hostname = input("Enter hostname: ") 
-    port = input("enter port: ")
-    username = input("enter username: ")
-    password = getpass.getpass("Enter password: ")
-
-    connection_name = input("Please name this connection: ")
-
-    result = sftp_client.save_credentials(connection_name, hostname, port, username, password)
-
-    return result
 
 def disconnect(sftp_client):
     connected = sftp_client.check_connection()
@@ -170,6 +161,22 @@ def diff(sftp_client):
         print(sftp_client.diff(remote_path_one, remote_path_two))
 
     return (False, "Not connected to server")
+
+def local_rename():
+    old_path = input("Enter current path: ") 
+    new_path = input("Enter new path: ")
+    os.rename(old_path, new_path)
+
+def remote_rename(sftp_client):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
+        old_path = input("Enter current path: ") 
+        new_path = input("Enter new path: ")
+        sftp_client.rename(old_path, new_path)
+    
+    return (False, "Not connected to server")
+
 
 def exit():
     return (True, "Exiting...")
