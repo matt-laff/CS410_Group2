@@ -296,10 +296,19 @@ class SFTP:
         try:
             self._SFTP.rmdir(remote_path)
             self._debug_logger.debug(f"Successfully removed directory at {remote_path}")
-            return (True, f"Successfuly removed directory at {remote_path}")
+            return (True, f"Successfully removed directory at {remote_path}")
         except Exception as e:
             self._debug_logger.error(f"Failed to remove directory at {remote_path}")
             return (False, f"Failed to remove directory at {remote_path}")
+
+    def remove_one_remote_file(self, remote_file_path):
+        try:
+            self._SFTP.remove(remote_file_path)
+            self._debug_logger.debug(f"Successfully removed remote file {remote_file_path}")
+            return (True, f"Successfully removed remote file {remote_file_path}")
+        except Exception as e:
+            self._debug_logger.error(f"Failed to remove remote file {remote_file_path}")
+            return (False, f"Failed to remove remote file {remote_file_path}")
     
     # Copy a local file (local_path) to the SFTP server as remote_path
     def put(self, local_path, remote_path):
@@ -311,6 +320,16 @@ class SFTP:
             self.print_error(f"Failed to copy {local_path} to {remote_path}", e, False)
             return (False, f"Failed to copy {local_path} to {remote_path}")
 
+    # put multiple local files to remote server
+    def put_all(self, local_path_list, remote_path_list):
+        try:
+            for local_path, remote_path in zip(local_path_list, remote_path_list):
+                self.put(self, local_path, remote_path)
+        except Exception as e:
+            self.print_error("Failed to put multiple local files to remote server", e, False)
+            return (False, "Failed to put multiple local files to remote server")
+
+    # Set default download location for when no local path is provided
     def set_download_location(self, download_path):
         try:
             self._download_location = download_path
