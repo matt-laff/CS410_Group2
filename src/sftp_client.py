@@ -230,8 +230,9 @@ class SFTP:
             found_files = []
             path = os.getcwd() 
             for root, dirs, files in os.walk(path): 
-                if pattern in files:
-                    found_files.append(os.path.join(root, pattern))
+                for file in files:
+                    if pattern in file:
+                        found_files.append(os.path.join(root, file))
             if (len(found_files) == 0):
                 return (False, "No files located")
             return (True, found_files)
@@ -242,6 +243,7 @@ class SFTP:
         
     # Changes the permissions of a file or directory on the remote server
     def change_permissions(self, remote_path, mode):
+        o_mode = int(mode, 8)
         try:
             # Ensure self._SFTP is initialized and connected
             if self._SFTP is None:
@@ -250,7 +252,7 @@ class SFTP:
 
             # Change the permissions
             # Use chmod method of SFTPClient instance to change the permissions of a file/directory on the remote server
-            self._SFTP.chmod(remote_path, mode)
+            self._SFTP.chmod(remote_path, o_mode)
 
         except Exception as e:
             self._debug_logger.error(f"Failed to change permissions for {remote_path}: {e}")
@@ -406,14 +408,13 @@ class SFTP:
     #Create directory on remote server
     def mkdir(self, dir_name):
         if self._SFTP is None:
-            print("Not connected to an SFTP Server.")
-            return 
+            return (False, "Not connected to an SFTP server") 
         try:
             self._SFTP.mkdir(dir_name, mode=511)
-            self.print_debug(f"Successfully created directory {dir_name}", None, True)
+            self._debug_logger.debug(f"Successfully created directory {dir_name}")
             return (True, (f"Successfully created directory {dir_name}"))
         except Exception as e:
-            self.print_error(f"Failed to make directory {dir_name}", e, True)        
+            self._debug_logger.error(f"Failed to make directory {dir_name}")
             return (False, (f"Failed to make directory {dir_name}:{e}"))
 
 
@@ -464,7 +465,7 @@ class SFTP:
         with self._SFTP.file(remote_path_one, mode='r') as file_one:
             with self._SFTP.file(remote_path_two, mode='r') as file_two:
                 diff = difflib.unified_diff(file_one.readlines(), file_two.readlines(), fromfile=remote_path_one, tofile=remote_path_two)
-                return '\n'.join(diff)
+                return (True, f"{'\n'.join(diff)}")
 
     # Explicit disconnect method
     def disconnect(self):
@@ -565,17 +566,12 @@ class SFTP:
             return (False, "Failed to load saved connections into dictionary")
         
     def rename(self, old_path, new_path):
-        self._SFTP.rename(old_path, new_path)
+        try:
+            self._SFTP.rename(old_path, new_path)
+            return (True, f"Renamed {old_path} to {new_path}")
+        except Exception as e: 
+            return (False, "failed to rename")
 
-    def print_debug(self, message, e = None, out = True):
-        if (e == None):
-            if (out == True):
-                print(message)
-            self._debug_logger.debug(f"{message}")
-        else:
-            if (out == True):
-                print(message)
-            self._debug_logger.debug(f"{message} : {e}")
 
     # Simple display of saved connections
     def display_saved_connections(self):
