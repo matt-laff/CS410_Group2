@@ -67,6 +67,7 @@ def login(sftp_client):
     username = input("enter username: ")
     password = getpass.getpass("Enter password: ")
 
+
     try:
         sftp_client._host = hostname
         sftp_client._port = int(port)

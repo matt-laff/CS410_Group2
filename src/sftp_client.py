@@ -358,6 +358,19 @@ class SFTP:
             self._debug_logger.debug(f"{result_msg} : {e}")
             return (False, result_msg)
 
+    #Create directory on remote server
+    def mkdir(self, dir_name):
+        if self._SFTP is None:
+            print("Not connected to an SFTP Server.")
+            return 
+        try:
+            self._SFTP.mkdir(dir_name, mode=511)
+            self.print_debug(f"Successfully created directory {dir_name}", None, True)
+            return (True, (f"Successfully created directory {dir_name}"))
+        except Exception as e:
+            self.print_error(f"Failed to make directory {dir_name}", e, True)        
+            return (False, (f"Failed to make directory {dir_name}:{e}"))
+
 
     # Helper function to convert remote formatting to local system formatting
     def remote_to_local(self, remote_path):
