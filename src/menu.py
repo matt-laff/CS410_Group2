@@ -1,3 +1,5 @@
+from src.input_decorator import InputTimeoutError
+
 class Menu:
 
     def __init__(self) -> None:
@@ -52,7 +54,9 @@ class Menu:
 
     def get_selection(self):
         try:
-            selection = int(input("Please make a selection "))
+            selection = int(input("Please make a selection: "))
+        except InputTimeoutError as e:
+            raise InputTimeoutError
         except Exception as e:
             return None 
         if selection > self._num_options or selection <= 0:

@@ -1,10 +1,20 @@
 import sys
 import getpass
 import os
+import builtins
 from src.menu import Menu
 from src import SFTP, setup_logger
+from src.input_decorator import reset_input_history
+from src.input_decorator import input_with_timeout
+from src.input_decorator import InputTimeoutError
 
 def main():
+
+    #reset input_history log file
+    reset_input_history()
+    # Override the built-in input function
+    simple_input = builtins.input
+    builtins.input = input_with_timeout()(builtins.input)  # Apply timeout decorator to built-in input
     sftp_client = SFTP() 
     test_menu = Menu()
     test_menu.set_title(" CS 410 Group 2 - SFTP ") 
@@ -20,6 +30,8 @@ def main():
     test_menu.add_option("Search remote server", search_remote, sftp_client)
     test_menu.add_option("file diff", diff, sftp_client)
     test_menu.add_option("Search local machine", search_local, sftp_client)
+    test_menu.add_option("rename local file", local_rename)
+    test_menu.add_option("rename remote file", remote_rename, sftp_client)
     test_menu.add_option("Exit", exit)
 
     option_selection = None
@@ -30,7 +42,14 @@ def main():
             result = test_menu.execute_option(option_selection)
             print(result[1])
             if (option_selection != "Exit"): 
+                #simple_input("\nPress Enter to continue...")
                 input("\nPress Enter to continue...")
+        except InputTimeoutError as e:
+
+            print("\nDue to inactivity, the program was shut down for security reasons")
+
+            sys.exit()
+
         except Exception as e:
             print(f"There was an error with your selection: {e}")
         
@@ -144,6 +163,7 @@ def diff(sftp_client):
 
     return (False, "Not connected to server")
 
+
 def search_local(sftp_client):
     connected = sftp_client.check_connection()
     if(connected[0]):
@@ -152,6 +172,22 @@ def search_local(sftp_client):
         return sftp_client.search_local(search_pattern)
     
     return (False, "Not connected to server")
+
+def local_rename():
+    old_path = input("Enter current path: ") 
+    new_path = input("Enter new path: ")
+    os.rename(old_path, new_path)
+
+def remote_rename(sftp_client):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
+        old_path = input("Enter current path: ") 
+        new_path = input("Enter new path: ")
+        sftp_client.rename(old_path, new_path)
+    
+    return (False, "Not connected to server")
+
 
 def exit():
     return (True, "Exiting...")
