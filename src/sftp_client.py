@@ -194,7 +194,7 @@ class SFTP:
         try:
             self._SFTP.mkdir(dir_name, mode=511)
             self.print_debug(f"Successfully created directory {dir_name}", None, True)
-            return (True, (f"Successfully created directory {dir_name}", ))
+            return (True, (f"Successfully created directory {dir_name}"))
         except Exception as e:
             self.print_error(f"Failed to make directory {dir_name}", e, True)        
             return (False, (f"Failed to make directory {dir_name}:{e}"))
