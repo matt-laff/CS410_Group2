@@ -29,6 +29,8 @@ def main():
     test_menu.add_option("Remove remote directory", remove_remote_dir, sftp_client)
     test_menu.add_option("Search remote server", search_remote, sftp_client)
     test_menu.add_option("file diff", diff, sftp_client)
+    test_menu.add_option("rename local file", local_rename)
+    test_menu.add_option("rename remote file", remote_rename, sftp_client)
     test_menu.add_option("Exit", exit)
 
     option_selection = None
@@ -159,6 +161,22 @@ def diff(sftp_client):
         print(sftp_client.diff(remote_path_one, remote_path_two))
 
     return (False, "Not connected to server")
+
+def local_rename():
+    old_path = input("Enter current path: ") 
+    new_path = input("Enter new path: ")
+    os.rename(old_path, new_path)
+
+def remote_rename(sftp_client):
+    connected = sftp_client.check_connection()
+    if (connected[0]):
+        sftp_client.list_directory()
+        old_path = input("Enter current path: ") 
+        new_path = input("Enter new path: ")
+        sftp_client.rename(old_path, new_path)
+    
+    return (False, "Not connected to server")
+
 
 def exit():
     return (True, "Exiting...")
