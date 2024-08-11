@@ -431,8 +431,8 @@ class SFTP:
             return (True, "")
 
         
-
-
+    def rename(self, old_path, new_path):
+        self._SFTP.rename(old_path, new_path)
 
     def print_debug(self, message, e = None, out = True):
         if (e == None):
