@@ -452,7 +452,7 @@ def test_list_directory_local_current(content, capsys):
 def test_change_permissions_success(client):
 
     remote_path = "incoming/file1.txt"
-    new_mode = 0o644  # Desired permissions
+    new_mode = "6444"  # Desired permissions
     success = client.change_permissions(remote_path, new_mode)
     assert success[0]==True
 
@@ -460,13 +460,13 @@ def test_change_permissions_success(client):
 def test_change_permissions_failure_not_connected_to_SFTP_server():
     disconnected_client = sftp_client.SFTP(22, 'localhost', 'user', 'password')
     remote_path = "incoming/file1.txt"
-    new_mode = 0o644  # Desired permissions
+    new_mode = "6444"  # Desired permissions
     captured = disconnected_client.change_permissions(remote_path, new_mode)
     assert ((captured[0]== False) and (captured[1]=="Not connected to an SFTP server"))
 
 def test_change_permissions_failure(client):
     remote_path = "non_existent_file.txt"
-    new_mode = 0o644  # Desired permissions
+    new_mode = "6444"  # Desired permissions
     captured = client.change_permissions(remote_path, new_mode)
     assert ((captured[0]== False) and (captured[1]=="Failed to change permissions for non_existent_file.txt: [Errno 2] No such file"))
 
