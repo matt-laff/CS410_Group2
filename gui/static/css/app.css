@@ -1,0 +1,24 @@
+@import url("assets.css");
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+		font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+:root {
+	--bg-color: #EAEDF2;
+	--white: #FFFFFF;
+}
+
+.sftp-connector {
+	width: 100%;
+	height: 100vh;
+	display: flex;
+	position: relative;
+	align-items: center;
+	flex-direction: column;
+	background-color: var(--bg-color);
+}

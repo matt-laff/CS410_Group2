@@ -1,0 +1,25 @@
+<div class="assets">
+	<h2>Recent files</h2>
+
+	<table>
+		<thead>
+			<tr>
+				<th>name</th>
+				<th>size</th>
+				<th>mtime</th>
+				<th>st_mode</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for file in data %}
+				<tr>
+					<td contenteditable="true" spellcheck="false" class="editable">{{file.filename}}</td>
+					<td><b style="border: 2px solid #ddd; padding: 5px">{{file.st_size}}</b></td>
+					<td>{{file.st_mtime}}</td>
+					<td><b style="border: 2px solid #ddd; padding: 5px">{{file.st_mode}}</b></td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<script src="{{ url_for('static', filename='script/assets.js') }}"></script>
+</div>
