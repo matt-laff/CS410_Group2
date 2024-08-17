@@ -1,8 +1,18 @@
 # CS410_Group2
 CS 410 Group 2
 
-# Environment Setup
+# TO RUN PROGRAM:
+python -m src
 
+# PYTEST RUN COMMAND:
+pytest
+
+
+
+
+===================
+
+# Environment Setup
 # Windows
 pip install virtualenv
 
@@ -27,6 +37,3 @@ pip install -r requirements
 
 # OS independant
 Now you can just run the appropriate activate script and everything should work
-
-# RUN COMMAND
-python -m src
